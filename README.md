@@ -46,6 +46,7 @@ rivus is a [mixed integer linear programming](https://en.wikipedia.org/wiki/Inte
    ```
    
 7. ~~Some custom Python helper functions (*to be included in rivus*)~~ 
+
 `Solved by pull request #8`: these functions are now included in this repository
    1. Launch a new command prompt (Win+R, type "cmd", Enter)
    2. Start a python interactive session by starting `python`. Within, execute the following commands:

@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import os
 from pyproj import Proj, transform
 from rivus.main import rivus
-from rivus.gridder.create_grid import create_square_grid as SquareGrid
-from rivus.gridder.extend_grid import extend_edge_data, vert_init_commodities
+from rivus.gridder import create_square_grid
+from rivus.gridder import extend_edge_data, vert_init_commodities
 
 # Constants - Inputs
 GLOB_EPSG = 4326  # WGS84 (OSM, GoogleMaps)
@@ -28,7 +28,7 @@ base_directory = os.path.join('data', 'chessboard')
 data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
 
 # Get Rivus Inputs
-vertex, edge = SquareGrid(origo_xy=ORIGOXY, epsg=PROJ_EPSG)
+vertex, edge = create_square_grid(origo_xy=ORIGOXY, epsg=PROJ_EPSG)
 vertex, edge = [gdf.to_crs(epsg=GLOB_EPSG) for gdf in (vertex, edge)]
 sorts = ['residential', 'industrial']
 inits = [1000, 0]
