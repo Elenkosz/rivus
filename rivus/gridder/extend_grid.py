@@ -66,10 +66,10 @@ def extend_edge_data(edge_df, dtype='area', strat='equal', sorts=None, inits=Non
     dtypes = ['area', 'damand']
 
     # Value to the distribution, and types
-    sorts = ['residental'] if not sorts else sorts
+    sorts = ['residential'] if not sorts else sorts
     inits = [1000] * len(sorts) if not inits else inits
     if len(sorts) != len(inits):
-        raise ValueError('sorts ans initvals are not equal long')
+        raise ValueError('sorts and initvals are not equal long')
 
     if strat == 'equal':
         for idx, sort in enumerate(sorts):

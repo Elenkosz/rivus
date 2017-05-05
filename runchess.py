@@ -12,6 +12,7 @@ from pyproj import Proj, transform
 from rivus.main import rivus
 from rivus.gridder import create_square_grid
 from rivus.gridder import extend_edge_data, vert_init_commodities
+from rivus.utils.prerun import setup_solver
 
 # Constants - Inputs
 GLOB_EPSG = 4326  # WGS84 (OSM, GoogleMaps)
@@ -28,18 +29,19 @@ base_directory = os.path.join('data', 'chessboard')
 data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
 
 # Get Rivus Inputs
-vertex, edge = create_square_grid(origo_xy=ORIGOXY, epsg=PROJ_EPSG)
+vertex, edge = create_square_grid(origo_xy=ORIGOXY, epsg=PROJ_EPSG, num_edge_x=3)
 vertex, edge = [gdf.to_crs(epsg=GLOB_EPSG) for gdf in (vertex, edge)]
-sorts = ['residential', 'industrial']
-inits = [1000, 0]
-extend_edge_data(edge, sorts=sorts, inits=inits)
+# sorts = ['residential']
+# inits = [1000, 0]
+# extend_edge_data(edge, sorts=sorts, inits=inits)
+extend_edge_data(edge)  # only residential, with 1000 kW init
 vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
                       [('Elec', 0, 100000), ('Gas', 1, 50000)])
 
-# print(edge)
-# print(vertex)
+print(edge)
+print(vertex)
 
-if False:
+if True:
     # load spreadsheet data
     data = rivus.read_excel(data_spreadsheet)
 
@@ -47,7 +49,8 @@ if False:
     prob = rivus.create_model(data, vertex, edge)
     if PYOMO3:
         prob = prob.create()  # no longer needed in Pyomo 4<
-    solver = SolverFactory('glpk')
+    solver = SolverFactory('gurobi')
+    solver = setup_solver(solver)
     result = solver.solve(prob, tee=True)
     if PYOMO3:
         prob.load(result)  # no longer needed in Pyomo 4<
@@ -65,6 +68,7 @@ if False:
 
     rivus.save(prob, os.path.join(result_dir, 'prob.pgz'))
     rivus.report(prob, os.path.join(result_dir, 'report.xlsx'))
+    rivus.result_figures(prob, os.path.join(result_dir, 'figs/'))
 
     # plot all caps (and demands if existing)
     for com, plot_type in [('Elec', 'caps'), ('Heat', 'caps'), ('Gas', 'caps'),
