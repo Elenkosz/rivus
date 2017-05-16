@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from itertools import product as iter_product
 from shapely.geometry import Point, LineString
-from geopandas import GeoSeries, GeoDataFrame
+from geopandas import GeoDataFrame
 from ..utils import pandashp as pdshp
 
 
