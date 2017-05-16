@@ -5,6 +5,7 @@ result/*
 doc/_build/*
 __pycache__/
 .idea/
+.vscode/
 playground/
 *.ipynb
 gdalwmscache/
