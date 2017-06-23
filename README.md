@@ -44,8 +44,13 @@ rivus is a [mixed integer linear programming](https://en.wikipedia.org/wiki/Inte
    ```
    pip install geopandas
    ```
+
+7. For interactive (3D) plots with **plotly**:
+   ```
+   pip install plotly
+   ```
    
-7. ~~Some custom Python helper functions (*to be included in rivus*)~~ 
+8. ~~Some custom Python helper functions (*to be included in rivus*)~~ 
 
 `Solved by pull request #8`: these functions are now included in this repository
    1. Launch a new command prompt (Win+R, type "cmd", Enter)
