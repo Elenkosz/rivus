@@ -4,6 +4,7 @@
     In use to avoid multiple solutions of the same
     problem.
 """
+from multiprocessing import cpu_count
 
 def setup_solver(optim, logfile='solver.log'):
     """Change solver options to custom values.
@@ -18,7 +19,7 @@ def setup_solver(optim, logfile='solver.log'):
         optim.set_options("TimeLimit=12000")  # seconds
         optim.set_options("MIPFocus=2")  # 1=feasible, 2=optimal, 3=bound
         optim.set_options("MIPGap=1e-3")  # default = 1e-4
-        optim.set_options("Threads=48")  # number of simultaneous CPU threads
+        optim.set_options("Threads={}".format(cpu_count()))  # number of simultaneous CPU threads
     elif optim.name == 'glpk':
         # reference with list of options
         # execute 'glpsol --help'

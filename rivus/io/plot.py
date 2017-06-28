@@ -211,7 +211,7 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
             'showlegend' : False, 'legendgroup' : com, 'name' : com,
             'hoverinfo' : 'text', 'text' : [],
             'marker' : {
-                'size' : 4,
+                'size' : 5,
                 'symbol' : 'cross',
                 'color' : COLORS[com]
             }
