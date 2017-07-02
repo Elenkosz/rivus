@@ -20,9 +20,12 @@ def vert_init_commodities(vertex_df, commodities, sources=None):
     if sources:
         for s in sources:
             check1 = (len(s) == 3) and isinstance(s[0], str)
-            check2 = isinstance(s[1], int) and isinstance(s[2], (int, float))
+            check2 = isinstance(s[1], int) and isinstance(s[2], (int, float)) and \
+                s[1] < len(vertex_df)
             if check1 and check2:
                 vertex_df.set_value(index=s[1], col=s[0], value=s[2])
+            else:
+                raise ValueError('Parameter problem in function call. ch1: {}, ch2: {}'.format(check1, check2))
 
 
 def extend_edge_data(edge_df, dtype='area', strat='equal', sorts=None, inits=None):
