@@ -15,7 +15,8 @@ from time import time as timenow
 from pandas import Series
 
 from rivus.main import rivus
-from rivus.gridder import create_square_grid, extend_edge_data, vert_init_commodities
+from rivus.gridder.create_grid import create_square_grid
+from rivus.gridder.extend_grid import extend_edge_data, vert_init_commodities
 from rivus.utils.prerun import setup_solver
 from rivus.io.plot import fig3d
 
