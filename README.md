@@ -19,7 +19,7 @@ Electricity network capacities|  Heat network capacities    |  Gas network capac
 ## Installation
 
 ### Windows
-Although the following instructions are tested on _Windows_, all of the given channels claim to be _compatible with all three leading platforms_.
+Although the following instructions are tested on _Windows_, all of the main packages' channels claim to be _compatible with all three leading platforms_. Noted if not so at the given step. 
 
 1. [**Anaconda (Python 3.6)**](http://continuum.io/downloads). Choose the 64-bit installer if possible.
 
@@ -45,8 +45,11 @@ Although the following instructions are tested on _Windows_, all of the given ch
 6. [Optional] Leverage the opportunities of graph analysis with **python-igraph** or **networkx**
    ```
    conda install -c conda-forge networkx
-   conda install -c marufr python-igraph
+   conda install -c conda-forge python-igraph  # lin-___-osx | py2.7, py3.4<
+   conda install -c vtraag python-igraph       # ___-win-___ | py2.7, py3.5
+   conda install -c marufr python-igraph       # lin-win-osx | py2.7, _____
    ```
+   For Windows the unofficial [wheel files](http://www.lfd.uci.edu/~gohlke/pythonlibs/) from Christoph Gohlke can be helpful in great need.
 
 
 ## Documentation / Tutorials
