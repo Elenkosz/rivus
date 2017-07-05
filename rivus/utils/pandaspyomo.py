@@ -16,7 +16,7 @@ Usage:
     
 """
 
-import coopr.pyomo as pyomo
+import pyomo as pyomo
 import pandas as pd
 
 def get_entity(instance, name):
