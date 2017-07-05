@@ -19,6 +19,7 @@ Electricity network capacities|  Heat network capacities    |  Gas network capac
 ## Installation
 
 ### Windows
+Although the following instructions are tested on _Windows_, all of the given channels claim to be _compatible with all three leading platforms_.
 
 1. [**Anaconda (Python 3.6)**](http://continuum.io/downloads). Choose the 64-bit installer if possible.
 
@@ -35,6 +36,18 @@ Electricity network capacities|  Heat network capacities    |  Gas network capac
    ```
    conda install -c conda-forge pyproj fiona geopy geopandas
    ```
+   
+5. [Optional] For interactive (3D) plots with **plotly**:
+   ```
+   conda install -c conda-forge plotly
+   ```
+
+6. [Optional] Leverage the opportunities of graph analysis with **python-igraph** or **networkx**
+   ```
+   conda install -c conda-forge networkx
+   conda install -c marufr python-igraph
+   ```
+
 
 ## Documentation / Tutorials
 
