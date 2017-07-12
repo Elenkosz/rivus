@@ -86,7 +86,7 @@ def _linewidth(value, scale=1.0):
 
 
 def _add_points(prob, bm, comm_zs, source, proc):
-    """
+    """ Add Source points TODO:add process handling
     Args:
         prob (rivus model): For data retrieval
         bm (Basemap map): For coordinate transformation
@@ -305,24 +305,22 @@ def fig3d(prob, comms=None, linescale=1.0, usehubs=False, hubopac=0.55, dz=5, la
         prob (rivus_archive): A rivus model (later extract of it)
         comms (None, optional): list/ndarray of commodity names to plot,
                Order: ['C1', 'C2', 'C3'] -> Bottom: C1, Top: C3
-        linescale (float, optional): a multiplier to get propotionally thicker lines
-        usehubs (bool, optional): switch to depict hub processes
-        hubopac (float, optional): 0-1 opacity param
-        dz (number, optional): distance between layers along 'z' axis 
-        layout (None, optional): a plotly layout dict to overwrite default
-        verbose (bool, optional): to print out progress and the time it took
+        linescale (float, optional):
+            A multiplier to get proportionally thicker lines.
+        usehubs (bool, optional): Switch to depict hub processes.
+        hubopac (float, optional): 0-1 opacity param.
+        dz (number, optional): Distance between layers along 'z' axis .
+        layout (None, optional): A plotly layout dict to overwrite default.
+        verbose (bool, optional): To print out progress and the time it took.
     
-    Example:
+    Usage:
         import plotly.offline as po
         fig = fig3d(prob, ['Gas', 'Heat', 'Elec'], hubopac=0.55, linescale=7)
         # po.plot(fig, filename='plotly-game.html', image='png') for static image
         po.plot(fig, filename='plotly-game.html')
     
-    Deleted Parameters:
-        Returns: plotly figure
-    
     Returns:
-        TYPE: plotly compatible figure dict (in plotly everything is kinda a dict.)
+        plotly compatible figure *dict* (in plotly everything is kinda a dict.)
     """
     if verbose:
         import time
@@ -421,17 +419,15 @@ def fig3d(prob, comms=None, linescale=1.0, usehubs=False, hubopac=0.55, dz=5, la
 
 
 if __name__ == '__main__':
+    # Some primitive testing functions    
     import os
-
+    import time
     # Files Access -------
-    filestart = time.time()
     base_directory = os.path.join('../../../data', 'chessboard')
-    data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
     result_dir = os.path.join('../../../result', os.path.basename(base_directory))
     # create result directory if not existing already
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
-    print('File init. {:.3f}'.format(time.time() - filestart))
 
     print('Loading pickled modell...')
     pickstart = time.time()
@@ -439,5 +435,10 @@ if __name__ == '__main__':
     print('Loaded. {:.3f}'.format(time.time() - pickstart))
 
     fig = fig3d(prob, ['Gas', 'Heat', 'Elec'], hubopac=0.55, linescale=7)
-    # po.plot(fig, filename='plotly-game.html', image='png')
+    # po.plot(fig, filename='plotly-game.html', image='png', output_type='file')
     po.plot(fig, filename='plotly-game.html')
+    # Hint:
+    # output_type ('file' | 'div' - default 'file') -- if 'file', then
+    # the graph is saved as a standalone HTML file and `plot` returns None.
+    # If 'div', then `plot` returns a string that just contains the
+    # HTML <div> that contains the graph and the script to generate the graph.

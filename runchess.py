@@ -1,31 +1,35 @@
-try:
-    import pyomo.environ
-    from pyomo.opt.base import SolverFactory
-    PYOMO3 = False
-except ImportError:
-    import coopr.environ
-    from coopr.opt.base import SolverFactory
-    PYOMO3 = True
 import os
-import matplotlib.pyplot as plt
-from datetime import datetime
-from pyproj import Proj, transform
-from plotly.offline import plot as plot3d
-from time import time as timenow
 from pandas import Series
-
+from datetime import datetime
+from time import time as timenow
 from rivus.main import rivus
-from rivus.gridder.create_grid import create_square_grid
-from rivus.gridder.extend_grid import extend_edge_data, vert_init_commodities
-from rivus.utils.prerun import setup_solver
-from rivus.io.plot import fig3d
-
-
+# =========================================================
 # Constants - Inputs
 lat, lon = [48.13512, 11.58198]  # You can copy LatLon into this list
 SOLVER = False
+PLOTTER = False
 # ---- Solver = True to create and solve new problem
 # ---- Solver = False to load an already solved model and investigate it
+# =========================================================
+if SOLVER:
+    try:
+        from pyomo.opt.base import SolverFactory
+        PYOMO3 = False
+    except ImportError:
+        from coopr.opt.base import SolverFactory
+        PYOMO3 = True
+    from rivus.utils.prerun import setup_solver
+if PLOTTER:
+    # import matplotlib.pyplot as plt
+    from rivus.io.plot import fig3d
+    from plotly.offline import plot as plot3d
+
+
+from rivus.gridder.create_grid import create_square_grid
+from rivus.gridder.extend_grid import extend_edge_data, vert_init_commodities
+from rivus.io import db as rdb
+import psycopg2 as psql
+
 
 # Files Access
 datenow = datetime.now().strftime('%y%m%dT%H%M')
@@ -37,13 +41,12 @@ prob_dir = os.path.join('result', proj_name)
 profile_log = {}
 
 
-
 if SOLVER:
     # Create Rivus Inputs
     creategrid = timenow()
     vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=4, dx=1000)
     profile_log['grid creation'] = round(timenow() - creategrid, 2)
-    
+
     extendgrid = timenow()
     extend_edge_data(edge)  # only residential, with 1000 kW init
     vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
@@ -74,7 +77,8 @@ if SOLVER:
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
 
-    print('Saving pickle...'); rivuspickle = timenow()
+    print('Saving pickle...')
+    rivuspickle = timenow()
     rivus.save(prob, os.path.join(result_dir, 'prob.pgz'))
     profile_log['save data'] = timenow() - rivuspickle
     print('Pickle saved')
@@ -83,7 +87,7 @@ if SOLVER:
     profile_log['rivus report'] = timenow() - rivusreport
 else:
     print('Loading pickled modell...')
-    arch_dir = os.path.join('result', 'chessboard-170626T1331')
+    arch_dir = os.path.join('result', 'chessboard_light')
     arch_path = os.path.join(arch_dir, 'prob.pgz')
     rivusload = timenow()
     prob = rivus.load(arch_path)
@@ -92,14 +96,30 @@ else:
 
 # Plotting
 # rivus.result_figures(prob, os.path.join(result_dir, 'figs/'))
-print("Plotting..."); myprintstart = timenow()
-plotcomms = ['Gas', 'Heat', 'Elec']
-fig = fig3d(prob, plotcomms, linescale=8, usehubs=True)
-if SOLVER:
-    plot3d(fig, filename=os.path.join(result_dir, 'rivus_result.html'))
+if PLOTTER:
+    print("Plotting...")
+    myprintstart = timenow()
+    plotcomms = ['Gas', 'Heat', 'Elec']
+    fig = fig3d(prob, plotcomms, linescale=8, usehubs=True)
+    if SOLVER:
+        plot3d(fig, filename=os.path.join(result_dir, 'rivus_result.html'))
+    else:
+        plot3d(fig, filename=os.path.join(arch_dir, 'rivus_result.html'))
+    profile_log['plotting'] = timenow() - myprintstart
 else:
-    plot3d(fig, filename=os.path.join(arch_dir, 'rivus_result.html'))
-profile_log['plotting'] = timenow() - myprintstart
+    print('Using DB'); dbstart = timenow()
+    connection = psql.connect(database='rivus', user="postgres")
+    run_obj = {
+        'runner': 'Havasi',
+        'start_ts': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'status': 'prepared',
+        'outcame': 'not_run',
+    }
+    run_id = rdb.init_run(connection, **run_obj)
+    print(run_id)
+
+    connection.close()
+    profile_log['db'] = timenow() - dbstart
 
 print('{1} Script parts took: (sec) {1}\n{0:s}\n{1}{1}{1}{1}'.format(
     Series(profile_log, name='mini-profile').to_string(),
