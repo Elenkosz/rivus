@@ -46,7 +46,7 @@ data = rivus.read_excel(data_spreadsheet)
 print(edge)
 print(vertex)
 
-if False:
+if True:
     # create and solve model
     prob = rivus.create_model(data, vertex, edge)
     if PYOMO3:
