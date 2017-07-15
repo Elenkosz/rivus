@@ -1,25 +1,12 @@
 """Postgres helpers
 Of course after you established a connection to the database, you can do
-whatever you are capable of with SQL.
+whatever you are capable of with your SQL-skills.
 However, to spare some effort, I added these helpers to avoid repetition of
 common tasks. Hopefully, this makes database integration easier in the future.
+Leading to better structured results.
 
-Basic ER diagram:
-(Visit [rivus_db](https://github.com/lnksz/rivus_db) or details)
-
-+----------------------+
-|         run          |
-+----+-----------------+
-| PK | run_id          |
-|    | date            |
-|    | runner          |
-|    | status          |
-|    | outcome         |
-|    | pre_duration    |
-|    | solve_duration  |
-|    | post_duration   |
-|    | plot            |
-+----+-----------------+
+For specific information on the entity relationschip of the expected DB visit:
+[rivus_db](https://github.com/lnksz/rivus_db)
 """
 
 import psycopg2 as psql
@@ -35,26 +22,26 @@ from pandas import DataFrame
 
 
 def _get_insert(table, df):
-    if 'edge' == table:
+    if table == 'edge':
         # also include edge_demand TODO
         cols = ['run_id', 'edge_num', 'vertex1', 'vertex2', 'geometry']
-    elif 'vertex' == table:
+    elif table == 'vertex':
         # also include vertex_source TODO
         # ['vertex_id', 'commodity_id', 'value']
         cols = ['run_id', 'vertex_num', 'geometry']
-    elif 'process' == table:
+    elif table == 'process':
         cols = ['run_id', 'process', 'cost_inv_fix', 'cost_inv_var',
                 'cost_fix', 'cost_var', 'cost_min', 'cost_max']
-    elif 'commodity' == table:
+    elif table == 'commodity':
         cols = ['run_id', 'commodity', 'unit', 'cost_inv_fix', 'cost_inv_var',
                 'cost_fix', 'cost_var', 'loss_fix', 'loss_var', 'allowed_max']
-    elif 'process_commodity' == table:
+    elif table == 'process_commodity':
         cols = ['process_id', 'commodity_id', 'direction', 'ratio']
-    elif 'time' == table:
+    elif table == 'time':
         # time_demand
         # ['time_id', 'commodity_id', 'scale']
         cols = ['run_id', 'time_step', 'weight']
-    elif 'area_demand' == table:
+    elif table == 'area_demand':
         # area
         # ['area_id', 'run_id', 'building_type']
         cols = ['area_id', 'commodity_id', 'peak']
@@ -91,9 +78,42 @@ def init_run(engine, runner='Havasi', start_ts=None, status='prepared',
                 RETURNING run_id;
                 """, (runner, start_ts, status, outcome))
             run_id = curs.fetchone()[0]
+            connection.commit()
     finally:
         connection.close()
     return run_id
+
+
+def _handle_geoframe(engine, table, df, run_id):
+    if table == 'vertex':
+        cols = ['run_id', 'vertex_num', 'geometry']
+        vals = '%s, %s, ST_GeogFromText(%s)'
+    if table == 'edge':
+        cols = ['run_id', 'edge_num', 'vertex1', 'vertex2', 'geometry']
+        vals = '%s, %s, %s, %s, ST_GeogFromText(%s)'
+
+    cols = ','.join(cols)
+    string_query = """
+        INSERT INTO {0} ({1})
+        VALUES ({2});
+        """.format(table, cols, vals)
+
+    connection = engine.raw_connection()
+    try:
+        for key, row in df.iterrows():
+            wkt = row['geometry'].wkt
+            with connection.cursor() as curs:
+                if table == 'vertex':
+                    curs.execute(string_query, (run_id, int(key), wkt))
+                if table == 'edge':
+                    v1, v2 = key
+                    curs.execute(string_query, (run_id, row['Edge'],
+                                                v1, v2, wkt))
+                # run_id = curs.fetchone()[0]
+                connection.commit()
+    finally:
+        connection.close()
+    return
 
 
 def store(engine, prob, run_data=None, run_id=None, plot_data=None, graph=None):
@@ -101,7 +121,7 @@ def store(engine, prob, run_data=None, run_id=None, plot_data=None, graph=None):
         run_id = int(run_id)
     else:
         run_id = init_run(engine, **run_data) if run_data else init_run(engine)
-
+    print('store params for run <{}>'.format(run_id))
     col_map = {
         'Edge': 'edge_num',
         'allowed-max': 'allowed_max',
@@ -121,27 +141,28 @@ def store(engine, prob, run_data=None, run_id=None, plot_data=None, graph=None):
     for para in prob.params:
         df = prob.params[para]
         print('para has <{}>'.format(para))
-        if para is 'commodity':
+
+        if para == 'commodity':
             sql_df = df.rename(columns=col_map)
             sql_df['run_id'] = run_id
             sql_df.to_sql(para, engine, if_exists='append',
                           index_label=para)
-        if para is 'process':
+        if para == 'process':
             sql_df = df.loc[:, 'cost-inv-fix':'cap-max'].rename(columns=col_map)
             sql_df['run_id'] = run_id
             sql_df.to_sql(para, engine, if_exists='append',
                           index_label=para)
-        if para is 'edge':
-            sql_df = df.loc[:, ('Edge', 'geometry')].rename(columns=col_map)
-            sql_df['run_id'] = run_id
-            sql_df.to_sql(para, engine, if_exists='append',
-                          index_label=('vertex1', 'vertex2'))
-        if para is 'vertex':
+        if para == 'edge':
+            sql_df = df.loc[:, ('Edge', 'geometry')]
+            _handle_geoframe(engine, para, sql_df, run_id)
+            # sql_df.to_sql(para, engine, if_exists='append',
+            #               index_label=('vertex1', 'vertex2'))
+        if para == 'vertex':
             sql_df = df.geometry.to_frame()
-            sql_df['run_id'] = run_id
-            sql_df.to_sql(para, engine, if_exists='append',
-                          index_label='vertex_num')
-        if para is 'area_demand':
+            _handle_geoframe(engine, para, sql_df, run_id)
+            # sql_df.to_sql(para, engine, if_exists='append',
+            #               index_label='vertex_num')
+        if para == 'area_demand':
             area_types = df.unstack(level='Commodity').index.values
             sql_df = DataFrame({
                 'building_type': area_types,
@@ -149,10 +170,10 @@ def store(engine, prob, run_data=None, run_id=None, plot_data=None, graph=None):
             })
             sql_df.to_sql('area', engine, if_exists='append', index=False)
             # TODO table `area_demand`
-        if para is 'process_commodity':
+        if para == 'process_commodity':
             pass
-        if para is 'time':
-            sql_df = df.loc[:, 'weight']
+        if para == 'time':
+            sql_df = df.loc[:, 'weight'].to_frame()
             sql_df['run_id'] = run_id
             sql_df.to_sql(para, engine, if_exists='append',
                           index_label='time_step')
