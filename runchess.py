@@ -6,8 +6,13 @@ from rivus.main import rivus
 # =========================================================
 # Constants - Inputs
 lat, lon = [48.13512, 11.58198]  # You can copy LatLon into this list
-SOLVER = False
-PLOTTER = False
+import json
+config = []
+with open('./config.json') as conf:
+    config = json.load(conf)
+SOLVER = config['use_solver']
+PLOTTER = config['make_plot']
+STORE_DB = config['store_db']
 # ---- Solver = True to create and solve new problem
 # ---- Solver = False to load an already solved model and investigate it
 # =========================================================
@@ -24,12 +29,13 @@ if PLOTTER:
     from rivus.io.plot import fig3d
     from plotly.offline import plot as plot3d
 
+if STORE_DB:
+    import psycopg2 as psql
+    from sqlalchemy import create_engine
 
 from rivus.gridder.create_grid import create_square_grid
 from rivus.gridder.extend_grid import extend_edge_data, vert_init_commodities
 from rivus.io import db as rdb
-import psycopg2 as psql
-
 
 # Files Access
 datenow = datetime.now().strftime('%y%m%dT%H%M')
@@ -64,7 +70,7 @@ if SOLVER:
 
     if PYOMO3:
         prob = prob.create()  # no longer needed in Pyomo 4<
-    solver = SolverFactory('gurobi')
+    solver = SolverFactory(config['solver'])
     solver = setup_solver(solver)
     startsolver = timenow()
     result = solver.solve(prob, tee=True)
@@ -106,19 +112,20 @@ if PLOTTER:
     else:
         plot3d(fig, filename=os.path.join(arch_dir, 'rivus_result.html'))
     profile_log['plotting'] = timenow() - myprintstart
-else:
-    print('Using DB'); dbstart = timenow()
-    connection = psql.connect(database='rivus', user="postgres")
-    run_obj = {
-        'runner': 'Havasi',
-        'start_ts': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'status': 'prepared',
-        'outcame': 'not_run',
-    }
-    run_id = rdb.init_run(connection, **run_obj)
-    print(run_id)
 
-    connection.close()
+if STORE_DB:
+    print('Using DB')
+    dbstart = timenow()
+
+    _user = config['db']['user']
+    _pass = config['db']['pass']
+    _host = config['db']['host']
+    _base = config['db']['base']
+    engine_string = 'postgresql://{}:{}@{}/{}'.format(_user, _pass,
+                                                      _host, _base)
+    engine = create_engine(engine_string)
+    rdb.store(engine, prob)
+
     profile_log['db'] = timenow() - dbstart
 
 print('{1} Script parts took: (sec) {1}\n{0:s}\n{1}{1}{1}{1}'.format(
