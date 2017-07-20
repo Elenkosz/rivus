@@ -14,7 +14,7 @@ result/*
 doc/_build/*
 *.html
 
-# experimentals
+# private / experimentals
 # #############
 *.ipynb
 playground/
