@@ -29,7 +29,9 @@ def to_igraph(vdf, edf, pmax, comms=None, peak=None, save_dir=None, ext='gml'):
             To be sure, that all edges are created.
         pmax (DataFrame): Commodities as columns with max capacity per edge
             returned by rivus.get_constants()
-        comms (iterable, optional): Names of commodities
+        comms (iterable, optional): Names of the commodities from which we
+            build the graphs. (Each as separate graph.) If omitted, the columns
+            of pmax will be used.
         peak (DataFrame, optional): Commodities as columns with demands
             in t_peak time-step. Calculated in main.rivus
         save_dir (path string, optional): Path to a dir to save graphs as `ext`
@@ -95,7 +97,9 @@ def to_nx(vdf, edf, pmax, comms=None, save_dir=None):
             To be sure, that all edges are created.
         pmax (DataFrame): Commodities as columns with max capacity per edge
             returned by rivus.get_constants()
-        comms (iterable, optional): Names of commodities
+        comms (iterable, optional): Names of the commodities from which we
+            build the graphs. (Each as separate graph.) If omitted, the columns
+            of pmax will be used.
         save_dir (path string, optional): Path to a dir to save graphs as GML.
             Path preferably constructed using the `os.path` module
             If dir does not exit yet, it will be created.

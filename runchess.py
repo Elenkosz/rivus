@@ -13,6 +13,7 @@ with open('./config.json') as conf:
 SOLVER = config['use_solver']
 PLOTTER = config['make_plot']
 STORE_DB = config['store_db']
+GRAPHS = config['g_analysis']
 # ---- Solver = True to create and solve new problem
 # ---- Solver = False to load an already solved model and investigate it
 # =========================================================
@@ -28,16 +29,18 @@ if PLOTTER:
     # import matplotlib.pyplot as plt
     from rivus.io.plot import fig3d
     from plotly.offline import plot as plot3d
-
 if STORE_DB:
-    import psycopg2 as psql
+    from datetime import datetime
     from sqlalchemy import create_engine
+if GRAPHS:
+    from rivus.graph.to_graph import to_nx
+
 
 from rivus.gridder.create_grid import create_square_grid
 from rivus.gridder.extend_grid import extend_edge_data, vert_init_commodities
 from rivus.io import db as rdb
 
-# Files Access
+# Files Access | INITs
 datenow = datetime.now().strftime('%y%m%dT%H%M')
 proj_name = 'chessboard'
 base_directory = os.path.join('data', proj_name)
@@ -125,34 +128,21 @@ if STORE_DB:
     engine_string = ('postgresql://{}:{}@{}/{}'
                      .format(_user, _pass, _host, _base))
     engine = create_engine(engine_string)
-    rdb.store(engine, prob)
-    # =============================
-    # run_id = rdb.init_run(engine)
-    # print(run_id)
-    # col_map = {
-    #     'Edge': 'edge_num',
-    #     'allowed-max': 'allowed_max',
-    #     'cap-max': 'cap_max',
-    #     'cap-min': 'cap_min',
-    #     'cost-fix': 'cost_fix',
-    #     'cost-inv-fix': 'cost_inv_fix',
-    #     'cost-inv-var': 'cost_inv_var',
-    #     'cost-var': 'cost_var',
-    #     'loss-fix': 'loss_fix',
-    #     'loss-var': 'loss_var',
-    # }
-    # df = prob.params['commodity']
-    # sql_df = df.rename(columns=col_map)
-    # sql_df['run_id'] = run_id
-    # sql_df.to_sql('commodity', engine, if_exists='append',
-    #               index_label='commodity')
-    # df = prob.params['time']
-    # sql_df = df.loc[:, 'weight'].to_frame()
-    # sql_df['run_id'] = run_id
-    # sql_df.to_sql('time', engine, if_exists='append',
-    #               index_label='time_step')
+    # rdb.init_run(engine)
+    # rdb.store(engine, prob)
+    fetched_df = rdb.df_from_table(engine, 'time', 2)
+    print('Fetched table:\n', fetched_df)
 
     profile_log['db'] = timenow() - dbstart
+
+    # import pandas as pd
+    # with pd.ExcelWriter('./fetched.xlsx') as writer:
+    #     fetched_df.to_excel(writer, 'edge')
+
+
+if GRAPHS:
+    import
+
 
 print('{1} Script parts took: (sec) {1}\n{0:s}\n{1}{1}{1}{1}'.format(
     Series(profile_log, name='mini-profile').to_string(),
