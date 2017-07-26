@@ -14,14 +14,17 @@ SOLVER = config['use_solver']
 PLOTTER = config['make_plot']
 STORE_DB = config['store_db']
 GRAPHS = config['g_analysis']
+SPANNER = config['calc_minimal']
 # ---- Solver = True to create and solve new problem
 # ---- Solver = False to load an already solved model and investigate it
 # =========================================================
 if SOLVER:
     try:
+        import pyomo.environ
         from pyomo.opt.base import SolverFactory
         PYOMO3 = False
     except ImportError:
+        import coopr.environ
         from coopr.opt.base import SolverFactory
         PYOMO3 = True
     from rivus.utils.prerun import setup_solver
@@ -30,10 +33,13 @@ if PLOTTER:
     from rivus.io.plot import fig3d
     from plotly.offline import plot as plot3d
 if STORE_DB:
-    from datetime import datetime
+    # from datetime import datetime
     from sqlalchemy import create_engine
 if GRAPHS:
+    import networkx as nx
+    # import igraph as pig
     from rivus.graph.to_graph import to_nx
+    from rivus.main.rivus import get_constants
 
 
 from rivus.gridder.create_grid import create_square_grid
@@ -47,30 +53,30 @@ base_directory = os.path.join('data', proj_name)
 data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
 result_dir = os.path.join('result', '{}-{}'.format(proj_name, datenow))
 prob_dir = os.path.join('result', proj_name)
-profile_log = {}
+profile_log = Series(name='minimal-profiler')
 
 
 if SOLVER:
     # Create Rivus Inputs
     creategrid = timenow()
-    vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=4,
+    vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=3,
                                       dx=1000)
-    profile_log['grid creation'] = round(timenow() - creategrid, 2)
+    profile_log['grid_creation'] = round(timenow() - creategrid, 2)
 
     extendgrid = timenow()
     extend_edge_data(edge)  # only residential, with 1000 kW init
     vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
                           [('Elec', 0, 100000), ('Gas', 0, 5000)])
-    profile_log['grid data'] = timenow() - extendgrid
+    profile_log['grid_data'] = timenow() - extendgrid
     # ---- load spreadsheet data
     excelread = timenow()
     data = rivus.read_excel(data_spreadsheet)
-    profile_log['excel read'] = timenow() - excelread
+    profile_log['excel_read'] = timenow() - excelread
 
     # Create and solve model
     rivusmain = timenow()
     prob = rivus.create_model(data, vertex, edge)
-    profile_log['rivus main'] = timenow() - rivusmain
+    profile_log['rivus_main'] = timenow() - rivusmain
 
     if PYOMO3:
         prob = prob.create()  # no longer needed in Pyomo 4<
@@ -84,24 +90,24 @@ if SOLVER:
 
     # Handling results
     # ---- create result directory if not existing already
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
+    # if not os.path.exists(result_dir):
+    #     os.makedirs(result_dir)
 
-    print('Saving pickle...')
-    rivuspickle = timenow()
-    rivus.save(prob, os.path.join(result_dir, 'prob.pgz'))
-    profile_log['save data'] = timenow() - rivuspickle
-    print('Pickle saved')
-    rivusreport = timenow()
-    rivus.report(prob, os.path.join(result_dir, 'report.xlsx'))
-    profile_log['rivus report'] = timenow() - rivusreport
+    # print('Saving pickle...')
+    # rivuspickle = timenow()
+    # rivus.save(prob, os.path.join(result_dir, 'prob.pgz'))
+    # profile_log['save_data'] = timenow() - rivuspickle
+    # print('Pickle saved')
+    # rivusreport = timenow()
+    # rivus.report(prob, os.path.join(result_dir, 'report.xlsx'))
+    # profile_log['rivus_report'] = timenow() - rivusreport
 else:
     print('Loading pickled modell...')
     arch_dir = os.path.join('result', 'chessboard_light')
     arch_path = os.path.join(arch_dir, 'prob.pgz')
     rivusload = timenow()
     prob = rivus.load(arch_path)
-    profile_log['rivus load'] = timenow() - rivusload
+    profile_log['rivus_load'] = timenow() - rivusload
     print('Loaded.')
 
 # Plotting
@@ -117,6 +123,27 @@ if PLOTTER:
         plot3d(fig, filename=os.path.join(arch_dir, 'rivus_result.html'))
     profile_log['plotting'] = timenow() - myprintstart
 
+if GRAPHS:
+    print('Graph handling.')
+    graph_prep = timenow()
+    _, pmax, _, _ = get_constants(prob)
+    graphs = to_nx(prob.params['vertex'], prob.params['edge'], pmax)
+    profile_log['graph_prep'] = timenow() - graph_prep
+
+    graph_anal_sum = timenow()
+    graph_data = []
+    for G in graphs:
+        print('Analysing <{}> graph'.format(G.graph['Commodity']))
+        g_data = {
+            'commodity': G.graph['Commodity'],
+            'is_connected': nx.is_connected(G),
+            'connected_components': nx.number_connected_components(G)}
+        if SPANNER:
+            spanner = nx.minimum_spanning_tree(G)
+            g_data['is_minimal'] = nx.is_isomorphic(G, spanner)
+        graph_data.append(g_data)
+    profile_log['graph_anal_sum'] = timenow() - graph_anal_sum
+
 if STORE_DB:
     print('Using DB')
     dbstart = timenow()
@@ -128,10 +155,14 @@ if STORE_DB:
     engine_string = ('postgresql://{}:{}@{}/{}'
                      .format(_user, _pass, _host, _base))
     engine = create_engine(engine_string)
-    # rdb.init_run(engine)
-    # rdb.store(engine, prob)
-    fetched_df = rdb.df_from_table(engine, 'time', 2)
-    print('Fetched table:\n', fetched_df)
+    this_run = dict(comment='testing graph table and features with networx',
+                    profiler=profile_log)
+    if GRAPHS:
+        rdb.store(engine, prob, run_data=this_run, graph_results=graph_data)
+    else:
+        rdb.store(engine, prob, run_data=this_run)
+    # fetched_df = rdb.df_from_table(engine, 'time', 2)
+    # print('Fetched table:\n', fetched_df)
 
     profile_log['db'] = timenow() - dbstart
 
@@ -140,10 +171,5 @@ if STORE_DB:
     #     fetched_df.to_excel(writer, 'edge')
 
 
-if GRAPHS:
-    import
-
-
 print('{1} Script parts took: (sec) {1}\n{0:s}\n{1}{1}{1}{1}'.format(
-    Series(profile_log, name='mini-profile').to_string(),
-    '=' * 6))
+      profile_log.to_string(), '=' * 6))
