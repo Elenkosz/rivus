@@ -43,6 +43,8 @@ if GRAPHS:
     from rivus.graph.analysis import minimal_graph_anal
     from rivus.main.rivus import get_constants
 
+from numpy import arange
+
 
 # Files Access | INITs
 datenow = datetime.now().strftime('%y%m%dT%H%M')
@@ -64,32 +66,49 @@ def _source_variations(vertex, num_row, nom_col):
     # Here maybe extend_edge_data()?
 
 
-def _parameter_slider(non_spatial_df, param_id, modifier):
-    """Modify a parameter of a non spatial dataframe from the Excel input.
-    Use modifier to calculate the new value.
-    """
-    pass
-
-
-def _parameter_range(xls, df, locator, min=None, max=None):
+def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
+                     step=None):
     """Yield values of the parameter in a given range
-    original
-    for x in xs:
-        yield original-changed
-
-    Will it return original?
     Parameters
     ----------
-    df : TYPE
-        Description
-    locator : TYPE
-        Description
-    min : None, optional
+    xls: dict of DataFrames
+        As returned from rivus.main.read_excel
+    data_df : str
+        To select DataFrame from xls
+    index : valid pandas DataFrame row label
+        DataFrame .loc parameter to locate the parameter value.
+        E.g.: ['Gas power plant', 'CO2', 'Out'] or 'Gas'
+    column : str
+        Label of the column, where the parameter is.
+        E.g.: 'ratio' or 'cap-max'
+    lim_lo : None, optional
         If omitted, 90% of the original.
-    max : None, optional
-        If omited 110% of the original.
+    lim_up : None, optional
+        If omitted 110% of the original.
+    step : None, optional
+        The difference between two following yielded values.
+
+    Returns
+    -------
+    DataFrame
+        A modified version of xls[df_name]
     """
-    pass
+    df = data_df.copy()
+    is_multi = len(df.index.names) > 1
+    if is_multi:
+        original = df.loc[tuple(index)][column]
+    else:
+        original = df.loc[index][column]
+
+    lim_lo = 0.9 * original if lim_lo is None else lim_lo
+    lim_up = 1.1 * original if lim_up is None else lim_up
+    step = 0.05 * original if step is None else step
+    for mod in arange(lim_lo, lim_up, step):
+        if is_multi:
+            df.loc[tuple(index)][column] = mod
+        else:
+            df.loc[index, column] = mod
+        yield df
 
 
 def run_bunch():
@@ -108,12 +127,12 @@ def run_bunch():
     data = rivus.read_excel(data_spreadsheet)
     vdf, edf = create_square_grid(num_edge_x=3, dx=1000)
     interesting_parameters = [
-        {'df': 'commodity',
+        {'df_name': 'commodity',
          'locator': ('Elec', 'cost-fix'),
          'min': None, 'max': None},
-        {'df': 'process',
+        {'df_name': 'process',
          'locator': ('Elec heating domestic', 'cost-inv-var')},
-        {'df': 'process_commodity',
+        {'df_name': 'process_commodity',
          'locator': (['Heat pump domestic',  'Heat', 'Out'], 'ratio')},
     ]
     # Model Creation
