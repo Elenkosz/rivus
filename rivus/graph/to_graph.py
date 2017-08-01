@@ -1,15 +1,17 @@
 """Functions to convert tabular data to popular python graph structures
-igraph:
-    + C based with python wrappers.
-    + Included for speed and so scalability.
-    × Docs are OK.
-    - For windows install with unofficial wheel files. But it works.
 networkx:
     +/- Pure python implementation.
     + Widely used and tested.
     + Docs are quite good.
     + Easy (platform independent) installation
     - Slower than igraph (and graph-tools)
+igraph:
+    + C based with python wrappers.
+    + Mature library package.
+    + Included for speed and so for scalability.
+    × Docs are OK.
+    - Windows install can be somewhat tedious (with unofficial wheel files).
+      But it works.
 graph-tools: (maybe added in the future)
     + Self proclaimed: fastest in graph analyses
     - Not really windows user friendly (docker install should be tested)
