@@ -19,15 +19,15 @@ SPANNER = config['calc_minimal']
 # ---- Solver = False to load an already solved model and investigate it
 # =========================================================
 if SOLVER:
-    try:
-        import pyomo.environ
-        from pyomo.opt.base import SolverFactory
-        PYOMO3 = False
-    except ImportError:
-        import coopr.environ
-        from coopr.opt.base import SolverFactory
-        PYOMO3 = True
+    import pyomo.environ
+    from pyomo.opt.base import SolverFactory
+    from pyomo.opt import SolverStatus
+    from pyomo.opt import TerminationCondition
+
     from rivus.utils.prerun import setup_solver
+    from rivus.gridder.create_grid import create_square_grid
+    from rivus.gridder.extend_grid import extend_edge_data
+    from rivus.gridder.extend_grid import vert_init_commodities
 if PLOTTER:
     # import matplotlib.pyplot as plt
     from rivus.io.plot import fig3d
@@ -35,16 +35,13 @@ if PLOTTER:
 if STORE_DB:
     # from datetime import datetime
     from sqlalchemy import create_engine
+    from rivus.io import db as rdb
 if GRAPHS:
     import networkx as nx
     # import igraph as pig
     from rivus.graph.to_graph import to_nx
     from rivus.main.rivus import get_constants
 
-
-from rivus.gridder.create_grid import create_square_grid
-from rivus.gridder.extend_grid import extend_edge_data, vert_init_commodities
-from rivus.io import db as rdb
 
 # Files Access | INITs
 datenow = datetime.now().strftime('%y%m%dT%H%M')
@@ -55,6 +52,130 @@ result_dir = os.path.join('result', '{}-{}'.format(proj_name, datenow))
 prob_dir = os.path.join('result', proj_name)
 profile_log = Series(name='minimal-profiler')
 
+
+def _source_variations(vertex, num_row, nom_col):
+    pass
+    # should be a generator (yield to spare memory)
+    # generate vertex  dataframe variations for source points.
+    # src_set = calc_destination space()
+    # for src in src_set:
+    #   vert_init_commodities()
+    # Here maybe extend_edge_data()?
+
+
+def _parameter_slider(non_spatial_df, param_id, modifier):
+    """Modify a parameter of a non spatial dataframe from the Excel input.
+    Use modifier to calculate the new value.
+    """
+    pass
+
+
+def _parameter_range(xls, df, locator, min=None, max=None):
+    """Yield values of the parameter in a given range
+    original
+    for x in xs:
+        yield original-changed
+
+    Will it return original?
+    Parameters
+    ----------
+    df : TYPE
+        Description
+    locator : TYPE
+        Description
+    min : None, optional
+        If omitted, 90% of the original.
+    max : None, optional
+        If omited 110% of the original.
+    """
+    pass
+
+
+def minimal_graph_anal(graphs, calc_spanning=True, graph_package='NX'):
+    import warnings
+    if len(graphs) < 1:
+        warnings.info("Empty graph list was input to analyzer!")
+
+    if graph_package not in ['NX', 'IGRAPH']:
+        try:
+            if graphs[0]['name'] != '':
+                graph_package = 'IGRAPH'
+        except KeyError:
+            graph_package = 'NX'
+
+    graph_data = []
+    for G in graphs:
+        # print('Analyzing <{}> graph'.format(G.graph['Commodity']))
+        if graph_package == 'NX':
+            g_data = {
+                'commodity': G.graph['Commodity'],
+                'is_connected': nx.is_connected(G),
+                'connected_components': nx.number_connected_components(G)}
+            if calc_spanning:
+                spanner = nx.minimum_spanning_tree(G)
+                g_data['is_minimal'] = nx.is_isomorphic(G, spanner)
+        elif graph_package == 'IGRAPH':
+            g_data = {
+                'commodity': G['Commodity'],
+                'is_connected': G.is_connected(),
+                'connected_components': len(G.clusters())}
+            if calc_spanning:
+                spanner = G.spanning_tree(weights=G.es['weight'])
+                g_data['is_minimal'] = G.isomorphic(spanner)
+        graph_data.append(g_data)
+    return graph_data
+
+
+def pseudo_run_bunch():
+    """Run a bunch of optimizations and analysis automated.
+    """
+    data = rivus.read_excel(data_spreadsheet)
+    vdf, edf = create_square_grid(num_edge_x=3, dx=1000)
+    interesting_parameters = [
+        {'df': 'commodity',
+         'locator': ('Elec', 'cost-fix'),
+         'min': None, 'max': None},
+        {'df': 'process',
+         'locator': ('Elec heating domestic', 'cost-inv-var')},
+        {'df': 'process_commodity',
+         'locator': (['Heat pump domestic',  'Heat', 'Out'], 'ratio')},
+    ]
+    solver = SolverFactory(config['solver'])
+    solver = setup_solver(solver)
+    for vertex in _source_variations(vdf):
+        for param in interesting_parameters:
+            for variant in _parameter_range(data, **param):
+                prob = rivus.create_model(variant, vertex, edge)
+                results = solver.solve(prob, tee=True)
+                if (results.solver.status != SolverStatus.ok):
+                    status = 'error'
+                    outcome = 'error'
+                else:
+                    status = 'run'
+                    if (results.solver.termination_condition !=
+                            TerminationCondition.optimal):
+                        outcome = 'optimum_not_reached'
+                    else:
+                        outcome = 'optimum'
+                # Plot
+                plotcomms = ['Gas', 'Heat', 'Elec']
+                fig = fig3d(prob, plotcomms, linescale=8, usehubs=True)
+
+                # Graph
+                _, pmax, _, _ = get_constants(prob)
+                graphs = to_nx(prob.params['vertex'], prob.params['edge'],
+                               pmax)
+                graph_data = []
+                for G in graphs:
+                    print('Analysing <{}> graph'.format(G.graph['Commodity']))
+                    g_data = {
+                        'commodity': G.graph['Commodity'],
+                        'is_connected': nx.is_connected(G),
+                        'connected_components': nx.number_connected_components(G)}
+                    if SPANNER:
+                        spanner = nx.minimum_spanning_tree(G)
+                        g_data['is_minimal'] = nx.is_isomorphic(G, spanner)
+                    graph_data.append(g_data)
 
 if SOLVER:
     # Create Rivus Inputs
@@ -78,14 +199,10 @@ if SOLVER:
     prob = rivus.create_model(data, vertex, edge)
     profile_log['rivus_main'] = timenow() - rivusmain
 
-    if PYOMO3:
-        prob = prob.create()  # no longer needed in Pyomo 4<
     solver = SolverFactory(config['solver'])
     solver = setup_solver(solver)
     startsolver = timenow()
     result = solver.solve(prob, tee=True)
-    if PYOMO3:
-        prob.load(result)  # no longer needed in Pyomo 4<
     profile_log['solver'] = timenow() - startsolver
 
     # Handling results
