@@ -40,6 +40,7 @@ if GRAPHS:
     import networkx as nx
     # import igraph as pig
     from rivus.graph.to_graph import to_nx
+    from rivus.graph.analysis import minimal_graph_anal
     from rivus.main.rivus import get_constants
 
 
@@ -91,44 +92,19 @@ def _parameter_range(xls, df, locator, min=None, max=None):
     pass
 
 
-def minimal_graph_anal(graphs, calc_spanning=True, graph_package='NX'):
-    import warnings
-    if len(graphs) < 1:
-        warnings.info("Empty graph list was input to analyzer!")
-
-    if graph_package not in ['NX', 'IGRAPH']:
-        try:
-            if graphs[0]['name'] != '':
-                graph_package = 'IGRAPH'
-        except KeyError:
-            graph_package = 'NX'
-
-    graph_data = []
-    for G in graphs:
-        # print('Analyzing <{}> graph'.format(G.graph['Commodity']))
-        if graph_package == 'NX':
-            g_data = {
-                'commodity': G.graph['Commodity'],
-                'is_connected': nx.is_connected(G),
-                'connected_components': nx.number_connected_components(G)}
-            if calc_spanning:
-                spanner = nx.minimum_spanning_tree(G)
-                g_data['is_minimal'] = nx.is_isomorphic(G, spanner)
-        elif graph_package == 'IGRAPH':
-            g_data = {
-                'commodity': G['Commodity'],
-                'is_connected': G.is_connected(),
-                'connected_components': len(G.clusters())}
-            if calc_spanning:
-                spanner = G.spanning_tree(weights=G.es['weight'])
-                g_data['is_minimal'] = G.isomorphic(spanner)
-        graph_data.append(g_data)
-    return graph_data
-
-
-def pseudo_run_bunch():
+def run_bunch():
     """Run a bunch of optimizations and analysis automated.
     """
+    # DB connection
+    _user = config['db']['user']
+    _pass = config['db']['pass']
+    _host = config['db']['host']
+    _base = config['db']['base']
+    engine_string = ('postgresql://{}:{}@{}/{}'
+                     .format(_user, _pass, _host, _base))
+    engine = create_engine(engine_string)
+
+    # Input Data
     data = rivus.read_excel(data_spreadsheet)
     vdf, edf = create_square_grid(num_edge_x=3, dx=1000)
     interesting_parameters = [
@@ -140,12 +116,14 @@ def pseudo_run_bunch():
         {'df': 'process_commodity',
          'locator': (['Heat pump domestic',  'Heat', 'Out'], 'ratio')},
     ]
+    # Model Creation
     solver = SolverFactory(config['solver'])
     solver = setup_solver(solver)
-    for vertex in _source_variations(vdf):
+    # Solve | Analyze | Store | Change | Repeat
+    for _vdf in _source_variations(vdf):
         for param in interesting_parameters:
             for variant in _parameter_range(data, **param):
-                prob = rivus.create_model(variant, vertex, edge)
+                prob = rivus.create_model(variant, _vdf, edf)
                 results = solver.solve(prob, tee=True)
                 if (results.solver.status != SolverStatus.ok):
                     status = 'error'
@@ -163,130 +141,128 @@ def pseudo_run_bunch():
 
                 # Graph
                 _, pmax, _, _ = get_constants(prob)
-                graphs = to_nx(prob.params['vertex'], prob.params['edge'],
-                               pmax)
-                graph_data = []
-                for G in graphs:
-                    print('Analysing <{}> graph'.format(G.graph['Commodity']))
-                    g_data = {
-                        'commodity': G.graph['Commodity'],
-                        'is_connected': nx.is_connected(G),
-                        'connected_components': nx.number_connected_components(G)}
-                    if SPANNER:
-                        spanner = nx.minimum_spanning_tree(G)
-                        g_data['is_minimal'] = nx.is_isomorphic(G, spanner)
-                    graph_data.append(g_data)
+                graphs = to_nx(variant, edf, pmax)
+                graph_results = minimal_graph_anal(graphs)
 
-if SOLVER:
-    # Create Rivus Inputs
-    creategrid = timenow()
-    vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=3,
-                                      dx=1000)
-    profile_log['grid_creation'] = round(timenow() - creategrid, 2)
+                # Store
+                this_run = {
+                    'status': status,
+                    'outcome': outcome,
+                    'runner': 'lnksz',
+                    'plot': fig}
+                rdb.store(engine, prob, run_data=this_run,
+                          graph_results=graph_results)
 
-    extendgrid = timenow()
-    extend_edge_data(edge)  # only residential, with 1000 kW init
-    vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
-                          [('Elec', 0, 100000), ('Gas', 0, 5000)])
-    profile_log['grid_data'] = timenow() - extendgrid
-    # ---- load spreadsheet data
-    excelread = timenow()
-    data = rivus.read_excel(data_spreadsheet)
-    profile_log['excel_read'] = timenow() - excelread
+# if SOLVER:
+#     # Create Rivus Inputs
+#     creategrid = timenow()
+#     vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=3,
+#                                       dx=1000)
+#     profile_log['grid_creation'] = round(timenow() - creategrid, 2)
 
-    # Create and solve model
-    rivusmain = timenow()
-    prob = rivus.create_model(data, vertex, edge)
-    profile_log['rivus_main'] = timenow() - rivusmain
+#     extendgrid = timenow()
+#     extend_edge_data(edge)  # only residential, with 1000 kW init
+#     vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
+#                           [('Elec', 0, 100000), ('Gas', 0, 5000)])
+#     profile_log['grid_data'] = timenow() - extendgrid
+#     # ---- load spreadsheet data
+#     excelread = timenow()
+#     data = rivus.read_excel(data_spreadsheet)
+#     profile_log['excel_read'] = timenow() - excelread
 
-    solver = SolverFactory(config['solver'])
-    solver = setup_solver(solver)
-    startsolver = timenow()
-    result = solver.solve(prob, tee=True)
-    profile_log['solver'] = timenow() - startsolver
+#     # Create and solve model
+#     rivusmain = timenow()
+#     prob = rivus.create_model(data, vertex, edge)
+#     profile_log['rivus_main'] = timenow() - rivusmain
 
-    # Handling results
-    # ---- create result directory if not existing already
-    # if not os.path.exists(result_dir):
-    #     os.makedirs(result_dir)
+#     solver = SolverFactory(config['solver'])
+#     solver = setup_solver(solver)
+#     startsolver = timenow()
+#     result = solver.solve(prob, tee=True)
+#     profile_log['solver'] = timenow() - startsolver
 
-    # print('Saving pickle...')
-    # rivuspickle = timenow()
-    # rivus.save(prob, os.path.join(result_dir, 'prob.pgz'))
-    # profile_log['save_data'] = timenow() - rivuspickle
-    # print('Pickle saved')
-    # rivusreport = timenow()
-    # rivus.report(prob, os.path.join(result_dir, 'report.xlsx'))
-    # profile_log['rivus_report'] = timenow() - rivusreport
-else:
-    print('Loading pickled modell...')
-    arch_dir = os.path.join('result', 'chessboard_light')
-    arch_path = os.path.join(arch_dir, 'prob.pgz')
-    rivusload = timenow()
-    prob = rivus.load(arch_path)
-    profile_log['rivus_load'] = timenow() - rivusload
-    print('Loaded.')
+#     # Handling results
+#     # ---- create result directory if not existing already
+#     # if not os.path.exists(result_dir):
+#     #     os.makedirs(result_dir)
 
-# Plotting
-# rivus.result_figures(prob, os.path.join(result_dir, 'figs/'))
-if PLOTTER:
-    print("Plotting...")
-    myprintstart = timenow()
-    plotcomms = ['Gas', 'Heat', 'Elec']
-    fig = fig3d(prob, plotcomms, linescale=8, usehubs=True)
-    if SOLVER:
-        plot3d(fig, filename=os.path.join(result_dir, 'rivus_result.html'))
-    else:
-        plot3d(fig, filename=os.path.join(arch_dir, 'rivus_result.html'))
-    profile_log['plotting'] = timenow() - myprintstart
+#     # print('Saving pickle...')
+#     # rivuspickle = timenow()
+#     # rivus.save(prob, os.path.join(result_dir, 'prob.pgz'))
+#     # profile_log['save_data'] = timenow() - rivuspickle
+#     # print('Pickle saved')
+#     # rivusreport = timenow()
+#     # rivus.report(prob, os.path.join(result_dir, 'report.xlsx'))
+#     # profile_log['rivus_report'] = timenow() - rivusreport
+# else:
+#     print('Loading pickled modell...')
+#     arch_dir = os.path.join('result', 'chessboard_light')
+#     arch_path = os.path.join(arch_dir, 'prob.pgz')
+#     rivusload = timenow()
+#     prob = rivus.load(arch_path)
+#     profile_log['rivus_load'] = timenow() - rivusload
+#     print('Loaded.')
 
-if GRAPHS:
-    print('Graph handling.')
-    graph_prep = timenow()
-    _, pmax, _, _ = get_constants(prob)
-    graphs = to_nx(prob.params['vertex'], prob.params['edge'], pmax)
-    profile_log['graph_prep'] = timenow() - graph_prep
+# # Plotting
+# # rivus.result_figures(prob, os.path.join(result_dir, 'figs/'))
+# if PLOTTER:
+#     print("Plotting...")
+#     myprintstart = timenow()
+#     plotcomms = ['Gas', 'Heat', 'Elec']
+#     fig = fig3d(prob, plotcomms, linescale=8, usehubs=True)
+#     if SOLVER:
+#         plot3d(fig, filename=os.path.join(result_dir, 'rivus_result.html'))
+#     else:
+#         plot3d(fig, filename=os.path.join(arch_dir, 'rivus_result.html'))
+#     profile_log['plotting'] = timenow() - myprintstart
 
-    graph_anal_sum = timenow()
-    graph_data = []
-    for G in graphs:
-        print('Analysing <{}> graph'.format(G.graph['Commodity']))
-        g_data = {
-            'commodity': G.graph['Commodity'],
-            'is_connected': nx.is_connected(G),
-            'connected_components': nx.number_connected_components(G)}
-        if SPANNER:
-            spanner = nx.minimum_spanning_tree(G)
-            g_data['is_minimal'] = nx.is_isomorphic(G, spanner)
-        graph_data.append(g_data)
-    profile_log['graph_anal_sum'] = timenow() - graph_anal_sum
+# if GRAPHS:
+#     print('Graph handling.')
+#     graph_prep = timenow()
+#     _, pmax, _, _ = get_constants(prob)
+#     graphs = to_nx(prob.params['vertex'], prob.params['edge'], pmax)
+#     profile_log['graph_prep'] = timenow() - graph_prep
 
-if STORE_DB:
-    print('Using DB')
-    dbstart = timenow()
+#     graph_anal_sum = timenow()
+#     graph_data = []
+#     for G in graphs:
+#         print('Analysing <{}> graph'.format(G.graph['Commodity']))
+#         g_data = {
+#             'commodity': G.graph['Commodity'],
+#             'is_connected': nx.is_connected(G),
+#             'connected_components': nx.number_connected_components(G)}
+#         if SPANNER:
+#             spanner = nx.minimum_spanning_tree(G)
+#             g_data['is_minimal'] = nx.is_isomorphic(G, spanner)
+#         graph_data.append(g_data)
+#     profile_log['graph_anal_sum'] = timenow() - graph_anal_sum
 
-    _user = config['db']['user']
-    _pass = config['db']['pass']
-    _host = config['db']['host']
-    _base = config['db']['base']
-    engine_string = ('postgresql://{}:{}@{}/{}'
-                     .format(_user, _pass, _host, _base))
-    engine = create_engine(engine_string)
-    this_run = dict(comment='testing graph table and features with networx',
-                    profiler=profile_log)
-    if GRAPHS:
-        rdb.store(engine, prob, run_data=this_run, graph_results=graph_data)
-    else:
-        rdb.store(engine, prob, run_data=this_run)
-    # fetched_df = rdb.df_from_table(engine, 'time', 2)
-    # print('Fetched table:\n', fetched_df)
+# if STORE_DB:
+#     print('Using DB')
+#     dbstart = timenow()
 
-    profile_log['db'] = timenow() - dbstart
+#     _user = config['db']['user']
+#     _pass = config['db']['pass']
+#     _host = config['db']['host']
+#     _base = config['db']['base']
+#     engine_string = ('postgresql://{}:{}@{}/{}'
+#                      .format(_user, _pass, _host, _base))
+#     engine = create_engine(engine_string)
+#     this_run = dict(comment='testing graph table and features with networx',
+#                     profiler=profile_log)
+#     if GRAPHS:
+#         rdb.store(engine, prob, run_data=this_run, graph_results=graph_data)
+#     else:
+#         rdb.store(engine, prob, run_data=this_run)
+#     # fetched_df = rdb.df_from_table(engine, 'time', 2)
+#     # print('Fetched table:\n', fetched_df)
 
-    # import pandas as pd
-    # with pd.ExcelWriter('./fetched.xlsx') as writer:
-    #     fetched_df.to_excel(writer, 'edge')
+#     profile_log['db'] = timenow() - dbstart
+
+#     # import pandas as pd
+#     # with pd.ExcelWriter('./fetched.xlsx') as writer:
+#     #     fetched_df.to_excel(writer, 'edge')
 
 
-print('{1} Script parts took: (sec) {1}\n{0:s}\n{1}{1}{1}{1}'.format(
-      profile_log.to_string(), '=' * 6))
+# print('{1} Script parts took: (sec) {1}\n{0:s}\n{1}{1}{1}{1}'.format(
+#       profile_log.to_string(), '=' * 6))
