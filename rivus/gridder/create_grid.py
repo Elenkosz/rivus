@@ -2,7 +2,7 @@ import numpy as np
 from itertools import product as iter_product
 from shapely.geometry import Point, LineString
 from geopandas import GeoDataFrame
-
+from math import ceil
 from geopy.distance import distance
 from geopy import Point as gPoint
 from pyproj import Proj
@@ -28,11 +28,11 @@ def _gen_grid_edges(point_matrix):
 def _check_input(origo_latlon, num_edge_x, num_edge_y, dx, dy, noise_prop):
     if len(origo_latlon) != 2 or not all([isinstance(c, (int, float))
                                           for c in origo_latlon]):
-        raise TypeError('origo_latlon has nan element(s)')
-    if any([a < 1 for a in (num_edge_x, num_edge_y)]):
-        raise ValueError('number of edges must be 1<')
+        raise TypeError('Origo_latlon has nan element(s)')
+    if all([a < 1 for a in (num_edge_x, num_edge_y)]):
+        raise ValueError('Both of the edge dimensions cannot be <1.')
     if any([a < 0 for a in (dx, dy, noise_prop)]):
-        raise ValueError('dx, dy, noise_prop must be positive numbers')
+        raise ValueError('dx, dy, noise_prop must be positive numbers.')
 
 
 def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
@@ -57,7 +57,7 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
             length of the vertical edges (in meters)
         noise_prop : float, optional
             0.0 to MAX_NOISE < 1.0 effectively a relative missplacement radius
-        epsg : None, optional
+        epsg : int, optional
             If a valid epsg code which is supported py pyproy,
             the coordinates are calculated in the carthesian UTM CRS
             and then transformed into epsg4326 (latlon).
@@ -152,6 +152,8 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
 
     # Create Shapely objects
     vertices = [Point(coo) for coo in points]
+    # reshape(num_rows, num_cols) --> num_vert_y is the number of rows.
+    # As it counts the elements in a column along the y axis.
     point_matrix = np.array(points).reshape(num_vert_y, num_vert_x, 2)
     edges = _gen_grid_edges(point_matrix)
 
@@ -186,8 +188,30 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
     return (vdf, edf)
 
 
-def get_source_candidates(vdf, num_row, num_col):
-    vdf.reshape(num)
+def get_source_candidates(vdf, dim_x, dim_y):
+    """Calculate the set of indexes of the vertices, which are worth testing
+    as source vertex in a single commodity case. A square grid is assumed.
+    "Worth" means:
+    The minimal set of vertices which cover the main symmetrical positions.
+
+    Parameters
+    ----------
+    vdf : pandas DataFrame
+        The vertex frame. (Created by create_square_grid())
+    dim_x : int
+        Number of vertices along the x axis.
+    dim_y : int
+        Number of vertices along the y axis.
+
+    Returns
+    -------
+    List
+        Indexes of the vertices, which are worth testing as source vertex.
+    """
+    lim_x = ceil(dim_x / 2)
+    lim_y = ceil(dim_y / 2)
+    mat = vdf.index.values.reshape(dim_y, dim_x)
+    return mat, mat[0:lim_y, 0:lim_x]
 
 
 # Run Examples / Tests if script is executed directly
