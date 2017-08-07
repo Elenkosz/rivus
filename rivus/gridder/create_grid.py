@@ -103,7 +103,7 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
 
     _check_input(origo_latlon, num_edge_x, num_edge_y, dx, dy, noise_prop)
 
-    # Generate offsetted point coordinates
+    # Generate offset point coordinates
     if epsg is None:  # in  LatLon system
         # getting new points based on https://stackoverflow.com/a/24429798
         # Convert to geopy distance
@@ -211,7 +211,7 @@ def get_source_candidates(vdf, dim_x, dim_y):
     lim_x = ceil(dim_x / 2)
     lim_y = ceil(dim_y / 2)
     mat = vdf.index.values.reshape(dim_y, dim_x)
-    return mat, mat[0:lim_y, 0:lim_x]
+    return mat[0:lim_y, 0:lim_x].flatten().tolist()
 
 
 # Run Examples / Tests if script is executed directly
