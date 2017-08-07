@@ -64,7 +64,7 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
             If `None` or omitted, then the coordinates are calculated
             directly in epsg4326 with vincenty's formula for distance
             and the grid lines up with the North and East directions
-        match : enumerated values, optimal
+        match : enumerated values, optional
             0 : vertices and edges are matched by the logic of generation
                 (faster as less calculation is needed.)
             1 : matching is done geographicaly
@@ -184,6 +184,10 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
         edf.to_crs(epsg=4326, inplace=True)
 
     return (vdf, edf)
+
+
+def get_source_candidates(vdf, num_row, num_col):
+    vdf.reshape(num)
 
 
 # Run Examples / Tests if script is executed directly
