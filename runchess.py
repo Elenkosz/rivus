@@ -246,8 +246,8 @@ def run_loop():
 
 
 if RUN_BUNCH:
-    run_bunch()
-    # run_loop()
+    # run_bunch()
+    run_loop()
     sys.exit()
 
 # loosly structered run parts
