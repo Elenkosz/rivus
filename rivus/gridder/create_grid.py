@@ -26,7 +26,8 @@ def _gen_grid_edges(point_matrix):
 
 
 def _check_input(origo_latlon, num_edge_x, num_edge_y, dx, dy, noise_prop):
-    if len(origo_latlon) != 2 or not all([isinstance(c, (int, float)) for c in origo_latlon]):
+    if len(origo_latlon) != 2 or not all([isinstance(c, (int, float))
+                                          for c in origo_latlon]):
         raise TypeError('origo_latlon has nan element(s)')
     if any([a < 1 for a in (num_edge_x, num_edge_y)]):
         raise ValueError('number of edges must be 1<')
@@ -34,7 +35,9 @@ def _check_input(origo_latlon, num_edge_x, num_edge_y, dx, dy, noise_prop):
         raise ValueError('dx, dy, noise_prop must be positive numbers')
 
 
-def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1, num_edge_y=None, dx=100, dy=None, noise_prop=0.0, epsg=None, match=0):
+def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
+                       num_edge_y=None, dx=100, dy=None, noise_prop=0.0,
+                       epsg=None, match=0):
     ''' Create chessboard grid with edges and vertices
         on WGS84 suface with vincenty distance calculation
         lat ~ x, lon ~ y
@@ -62,7 +65,8 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1, num_edge
             directly in epsg4326 with vincenty's formula for distance
             and the grid lines up with the North and East directions
         match : enumerated values, optimal
-            0 : vertices and edges are matched by the logic of generation (faster)
+            0 : vertices and edges are matched by the logic of generation
+                (faster as less calculation is needed.)
             1 : matching is done geographicaly
                 with pandashp helper (slower, but flexible)
 
@@ -100,11 +104,12 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1, num_edge
     _check_input(origo_latlon, num_edge_x, num_edge_y, dx, dy, noise_prop)
 
     # Generate offsetted point coordinates
-    if epsg == None:  # in  LatLon system
+    if epsg is None:  # in  LatLon system
         # getting new points based on https://stackoverflow.com/a/24429798
         # Convert to geopy distance
         crsinit = {'init': 'epsg:4326'}
-        dx = distance(meters=dx); dy = distance(meters=dy)
+        dx = distance(meters=dx)
+        dy = distance(meters=dy)
         points = []
         startp = gPoint([lat, lon])
         # create the grid coordinates
@@ -119,20 +124,22 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1, num_edge
         try:
             UTMXX = Proj(init='epsg:{}'.format(epsg))
             crsinit = {'init': 'epsg:{}'.format(epsg)}  # for GeoDataFrame
-        except Exception as e:
+        except:
             raise ValueError('Not supported epsg number, \
                 only Proj4 init epsg numbers are supported')
         ox, oy = UTMXX(lon, lat)
         coords_x = np.arange(ox, ox + (dx * num_vert_x), dx)
         coords_y = np.arange(oy, oy + (dy * num_vert_y), dy)
-        points = [(x,y) for y, x in iter_product(coords_y, coords_x, repeat=1)]
+        points = [(x, y) for y, x in iter_product(coords_y, coords_x,
+                                                  repeat=1)]
 
     # Add fuzz
     if noise_prop > 0.0:
         def _fuzz(xy):
-            if epsg != None:
+            if epsg is not None:
                 return [xy[ii] + lim * (2 * np.random.rand() - 1)
-                    for ii, lim in enumerate((fuzz_radius_x, fuzz_radius_y))]
+                        for ii, lim in enumerate((fuzz_radius_x,
+                                                  fuzz_radius_y))]
             else:
                 lon, lat = xy
                 fromP = gPoint([lat, lon])
@@ -150,28 +157,30 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1, num_edge
 
     # Create GeoDataFrames
     vdf = GeoDataFrame(geometry=vertices, crs=crsinit)
-    vdf['Vertex'] = vdf.index  #; vdf.set_index('Vertex', inplace=True)
+    vdf['Vertex'] = vdf.index  # ; vdf.set_index('Vertex', inplace=True)
     edf = GeoDataFrame(geometry=edges, crs=crsinit)
-    edf['Edge'] = edf.index  #; edf.set_index('Edge', inplace=True)
+    edf['Edge'] = edf.index  # ; edf.set_index('Edge', inplace=True)
 
     # Match Vertex1 and Vertex2 columns to Vertex index
     if match == 1:
         from ..utils import pandashp as pdshp  # to match vertices and edges
         pdshp.match_vertices_and_edges(vdf, edf)
     elif match == 0:
-        v1s = []; v2s = []
-        indices = np.arange(num_vert_x * num_vert_y).reshape(num_vert_y, num_vert_x)
+        v1s = []
+        v2s = []
+        indices = np.arange(
+            num_vert_x * num_vert_y).reshape(num_vert_y, num_vert_x)
         for row in indices:
-            v1s.extend(row[:-1]);
+            v1s.extend(row[:-1])
             v2s.extend(row[1:])
         for col in indices.T:
-            v1s.extend(col[:-1]);
+            v1s.extend(col[:-1])
             v2s.extend(col[1:])
-        edf['Vertex1'] = v1s;
+        edf['Vertex1'] = v1s
         edf['Vertex2'] = v2s
 
-    if epsg != None:
-        vdf.to_crs(epsg=4326, inplace=True);
+    if epsg is not None:
+        vdf.to_crs(epsg=4326, inplace=True)
         edf.to_crs(epsg=4326, inplace=True)
 
     return (vdf, edf)
@@ -180,7 +189,8 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1, num_edge
 # Run Examples / Tests if script is executed directly
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    test0ver, test0edg = create_square_grid(num_edge_x=3, num_edge_y=2, noise_prop=0.0, epsg=32632)
+    test0ver, test0edg = create_square_grid(
+        num_edge_x=3, num_edge_y=2, noise_prop=0.0, epsg=32632)
     # test1ver, test1edg = create_square_grid(num_edge_x=6, noise_prop=0.1, epsg=32632)
     # test2ver, test2edg = create_square_grid(num_edge_x=6, noise_prop=0.2)
     # test3ver, test3edg = create_square_grid(num_edge_x=6, noise_prop=0.3)
