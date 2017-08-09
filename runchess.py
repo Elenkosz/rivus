@@ -30,6 +30,7 @@ if SOLVER or RUN_BUNCH:
 
     from rivus.utils.prerun import setup_solver
     from rivus.gridder.create_grid import create_square_grid
+    from rivus.gridder.create_grid import get_source_candidates
     from rivus.gridder.extend_grid import extend_edge_data
     from rivus.gridder.extend_grid import vert_init_commodities
 if PLOTTER or RUN_BUNCH:
@@ -62,15 +63,26 @@ def _geo_variations(create_params):
     pass
 
 
-def _source_variations(vertex, num_row=None, nom_col=None):
+def _source_variations(vertex, dim_x, dim_y):
     # should be a generator (yield to spare memory)
     # generate vertex  dataframe variations for source points.
     # src_set = calc_destination space()
     # for src in src_set:
     #   vert_init_commodities()
     # Here maybe also extend_edge_data()?
+    src_inds = get_source_candidates(vertex, dim_x, dim_y)
+    # max commodity capacity, the source can generate
+    MAX_ELEC = 160000
+    MAX_GAS = 500000
+    same_src = [[('Elec', S, MAX_ELEC), ('Gas', S, MAX_GAS)]
+                for S in src_inds]
+    flip = same_src.copy(); flip.reverse()
+    src_pairs_opposite = zip(src_inds, flip)
+    opposite_src = [[('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+                    for E, G in src_pairs_opposite]
+    source_setups = same_src + opposite_src
     vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
-                          [('Elec', 0, 100000), ('Gas', 0, 5000)])
+                          source_setups)
     for variant in [vertex, ]:
         yield variant
 

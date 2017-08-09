@@ -188,7 +188,7 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
     return (vdf, edf)
 
 
-def get_source_candidates(vdf, dim_x, dim_y):
+def get_source_candidates(vdf, dim_x, dim_y, logic='sym'):
     """Calculate the set of indexes of the vertices, which are worth testing
     as source vertex in a single commodity case. A square grid is assumed.
     "Worth" means:
@@ -202,16 +202,32 @@ def get_source_candidates(vdf, dim_x, dim_y):
         Number of vertices along the x axis.
     dim_y : int
         Number of vertices along the y axis.
+    logic : str, optional default='sym'
+        what kind or source candidates are looked for.
+        sym : Minimal(ish) set of vertices based on symmetry.
+        extrema: Pairs of vertices possibly further away from each other.
 
     Returns
     -------
     List
-        Indexes of the vertices, which are worth testing as source vertex.
+        smy : 1D list
+        extrema : 2D list - list of lists
     """
-    lim_x = ceil(dim_x / 2)
-    lim_y = ceil(dim_y / 2)
     mat = vdf.index.values.reshape(dim_y, dim_x)
-    return mat[0:lim_y, 0:lim_x].flatten().tolist()
+
+    if logic == 'sym':
+        lim_x = ceil(dim_x / 2)
+        lim_y = ceil(dim_y / 2)
+        return mat[0:lim_y, 0:lim_x].flatten().tolist()
+    elif logic == 'extrema':
+        corners = [(0, 0), (0, dim_x - 1), (dim_y - 1, 0),
+                   (dim_y - 1, dim_x - 1)]
+        borders = [[corners[0], corners[3]], [corners[0], corners[1]],
+                   [corners[0], corners[2]]]
+        return borders
+    else:
+        raise ValueError('Unsupported source vertex calculation logic: <{}>'
+                         .format(logic))
 
 
 # Run Examples / Tests if script is executed directly
