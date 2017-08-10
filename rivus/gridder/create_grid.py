@@ -205,7 +205,13 @@ def get_source_candidates(vdf, dim_x, dim_y, logic='sym'):
     logic : str, optional default='sym'
         what kind or source candidates are looked for.
         sym : Minimal(ish) set of vertices based on symmetry.
+            E.g. here the indices marked with * are selected.
+            18, 19, 20, 21, 22, 23
+            12, 13, 14, 15, 16, 17
+            *6, *7, *8,  9, 10, 11
+            *0, *1, *2,  3,  4,  5
         extrema: Pairs of vertices possibly further away from each other.
+            Say: combination of the corners.
 
     Returns
     -------
@@ -213,16 +219,19 @@ def get_source_candidates(vdf, dim_x, dim_y, logic='sym'):
         smy : 1D list
         extrema : 2D list - list of lists
     """
-    mat = vdf.index.values.reshape(dim_y, dim_x)
 
     if logic == 'sym':
+        mat = vdf.index.values.reshape(dim_y, dim_x)
         lim_x = ceil(dim_x / 2)
         lim_y = ceil(dim_y / 2)
         return mat[0:lim_y, 0:lim_x].flatten().tolist()
     elif logic == 'extrema':
-        corners = [(0, 0), (0, dim_x - 1), (dim_y - 1, 0),
+        corners = [(0, 0),
+                   (0, dim_x - 1),
+                   (dim_y - 1, 0),
                    (dim_y - 1, dim_x - 1)]
-        borders = [[corners[0], corners[3]], [corners[0], corners[1]],
+        borders = [[corners[0], corners[3]],
+                   [corners[0], corners[1]],
                    [corners[0], corners[2]]]
         return borders
     else:
