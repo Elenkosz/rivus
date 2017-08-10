@@ -78,23 +78,24 @@ def _source_variations(vertex, dim_x, dim_y):
     MAX_GAS = 500000
 
     src_inds = get_source_candidates(vertex, dim_x, dim_y, logic='sym')
-    same_src = [[('Elec', S, MAX_ELEC), ('Gas', S, MAX_GAS)]
-                for S in src_inds]
-    # _min_ix = min(same_src)
-    # _max_ix = max(same_src)
-    # central = [[('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
-    #            for E, G in [(_min_ix, _max_ix), (_max_ix, _min_ix)]]
-    flip = same_src.copy()
+    source_setups = [[('Elec', S, MAX_ELEC), ('Gas', S, MAX_GAS)]
+                     for S in src_inds]
+    flip = src_inds.copy()
     flip.reverse()
     src_pairs_opposite = zip(src_inds, flip)
-    opposite_src = [[('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
-                    for E, G in src_pairs_opposite]
-    src_corners = get_source_candidates(vertex, dim_x, dim_y, logic='extrema')
-    extrema_src = [[('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
-                   for E, G in src_corners]
+    for E, G in src_pairs_opposite:
+        this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+        if this_srcs not in source_setups:
+            source_setups.append(this_srcs)
 
-    source_setups = same_src + opposite_src + extrema_src
+    src_corners = get_source_candidates(vertex, dim_x, dim_y, logic='extrema')
+    for E, G in src_corners:
+        this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+        if this_srcs not in source_setups:
+            source_setups.append(this_srcs)
+
     for sources in source_setups:
+        print(sources)
         variant = vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
                                         sources=sources, inplace=False)
         yield variant
@@ -155,7 +156,7 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
 def run_bunch(**kwargs):
     """Run a bunch of optimizations and analysis automated. """
     # Files Access | INITs
-    proj_name = 'runbunch'
+    proj_name = 'chessboard'
     base_directory = os.path.join('data', proj_name)
     data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
     profile_log = Series(name='{}-profiler'.format(proj_name))
