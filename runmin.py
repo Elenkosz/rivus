@@ -43,9 +43,6 @@ vertex = pdshp.read_shp(vertex_shapefile)
 # load spreadsheet data
 data = rivus.read_excel(data_spreadsheet)
 
-print(edge)
-print(vertex)
-
 if True:
     # create and solve model
     prob = rivus.create_model(data, vertex, edge)
