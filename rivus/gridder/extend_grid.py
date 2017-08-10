@@ -45,15 +45,17 @@ def vert_init_commodities(vertex_df, commodities, sources=None, inplace=True):
         vdf[commo] = len(vdf) * [0]
     if sources:
         for s in sources:
-            is_well_typed = (isinstance(s[0], str) and isinstance(s[1], int)
-                             and isinstance(s[2], (int, float)))
+            is_well_typed = (isinstance(s[0], str) and
+                             abs(s[1]) >= 0 and
+                             abs(s[2]) >= 0)
             has_good_dims = (len(s) == 3) and s[1] < len(vdf)
             if is_well_typed and has_good_dims:
                 vdf.set_value(index=s[1], col=s[0], value=s[2])
             else:
-                raise ValueError('Parameter problem in function call. ' +
+                raise ValueError('Parameter problem in function call.\n' +
                                  'Type is good: {}\n'.format(is_well_typed) +
-                                 'Dims are good: {}'.format(has_good_dims))
+                                 'Dims are good: {}\n'.format(has_good_dims) +
+                                 'Source: {}'.format(s))
         if not inplace:
             return vdf
 
