@@ -95,7 +95,7 @@ def _source_variations(vertex, dim_x, dim_y):
             source_setups.append(this_srcs)
 
     for sources in source_setups:
-        print(sources)
+        print('\nCurrent sources: \n{}'.format(sources))
         variant = vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
                                         sources=sources, inplace=False)
         yield variant
@@ -135,7 +135,6 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
         original = df.loc[tuple(index)][column]
     else:
         original = df.loc[index][column]
-    print(original)
     LO_PROP = 0.9
     UP_PROP = 1.1
     STEP_PROP = 0.05
@@ -144,7 +143,8 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
     step = STEP_PROP * original if step is None else step * original
     if step == 0:
         step = None
-    print(lim_lo, lim_up, step)
+    print('\n> Parameter {} was: {} now changing from {} to {} by {}'.
+          format(column, original, lim_lo, lim_up, step))
     for mod in arange(lim_lo, lim_up, step):
         if is_multi:
             df.loc[tuple(index)][column] = mod
@@ -174,19 +174,23 @@ def run_bunch(**kwargs):
     # ----------
     # Spatial
     street_lengths = arange(50, 300, 25)
-    num_edge_xs = [1, 2]  # list(range(3, 10))
+    num_edge_xs = list(range(3, 15))
     # Non-spatial
     data = rivus.read_excel(data_spreadsheet)
     original_data = deepcopy(data)
     interesting_parameters = [
         {'df_name': 'commodity',
-         'args': {'index': 'Elec', 'column': 'cost-inv-fix', 'step': 0.1}},
-        {'df_name': 'commodity',
-         'args': {'index': 'Elec', 'column': 'cost-var', 'step': 0.1}}
+         'args': {'index': 'Elec',
+                  'column': 'cost-inv-fix',
+                  'step': 0.1}},
+        # {'df_name': 'commodity',
+        #  'args': {'index': 'Elec',
+        #           'column': 'cost-var',
+        #           'step': 0.1}}
     ]
     # Model Creation
     solver = SolverFactory(config['solver'])
-    solver = setup_solver(solver)
+    solver = setup_solver(solver, log_to_console=False)
     # Solve | Analyze | Store | Change | Repeat
     for dx in street_lengths:
         for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
@@ -249,6 +253,7 @@ def run_bunch(**kwargs):
                                 'profiler': profile_log}
                             rdb.store(engine, prob, run_data=this_run,
                                       graph_results=graph_results)
+                            print('\tRun ended with: <{}>\n'.format(outcome))
                             del __vdf
                             del __edf
                         data = original_data
