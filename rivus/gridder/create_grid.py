@@ -216,12 +216,12 @@ def get_source_candidates(vdf, dim_x, dim_y, logic='sym'):
     Returns
     -------
     List
-        smy : 1D list
-        extrema : 2D list - list of lists
+        smy : 1D list [1,2,6,7,8]
+        extrema : 2D list - list of lists [[0,23],[0,5],[0,18]]
     """
+    mat = vdf.index.values.reshape(dim_y, dim_x)
 
     if logic == 'sym':
-        mat = vdf.index.values.reshape(dim_y, dim_x)
         lim_x = ceil(dim_x / 2)
         lim_y = ceil(dim_y / 2)
         return mat[0:lim_y, 0:lim_x].flatten().tolist()
@@ -230,9 +230,9 @@ def get_source_candidates(vdf, dim_x, dim_y, logic='sym'):
                    (0, dim_x - 1),
                    (dim_y - 1, 0),
                    (dim_y - 1, dim_x - 1)]
-        borders = [[corners[0], corners[3]],
-                   [corners[0], corners[1]],
-                   [corners[0], corners[2]]]
+        borders = [[mat[corners[0]], mat[corners[3]]],
+                   [mat[corners[0]], mat[corners[1]]],
+                   [mat[corners[0]], mat[corners[2]]]]
         return borders
     else:
         raise ValueError('Unsupported source vertex calculation logic: <{}>'
