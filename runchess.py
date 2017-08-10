@@ -49,41 +49,54 @@ if GRAPHS or RUN_BUNCH:
     from rivus.main.rivus import get_constants
 
 
-# Files Access | INITs
-datenow = datetime.now().strftime('%y%m%dT%H%M')
-proj_name = 'chessboard'
-base_directory = os.path.join('data', proj_name)
-data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
-# result_dir = os.path.join('result', '{}-{}'.format(proj_name, datenow))
-# prob_dir = os.path.join('result', proj_name)
-profile_log = Series(name='minimal-profiler')
-
-
 def _geo_variations(create_params):
     pass
 
 
 def _source_variations(vertex, dim_x, dim_y):
-    # should be a generator (yield to spare memory)
-    # generate vertex  dataframe variations for source points.
-    # src_set = calc_destination space()
-    # for src in src_set:
-    #   vert_init_commodities()
-    # Here maybe also extend_edge_data()?
-    src_inds = get_source_candidates(vertex, dim_x, dim_y)
+    """Generate vertex dataframe variations with difference locations for the
+    source vertices.
+    Todo?: Here maybe also extend_edge_data()?
+
+    Parameters
+    ----------
+    vertex : DataFrame
+        Typical vertex dataframe, as returned by create_square_grid()
+    dim_x : int
+        Number of vertices alongside the x-axis
+    dim_y : int
+        Number of vertices alongside the y-axis
+
+    Yields
+    ------
+    Dataframe
+        Ready to be fead into the create_model() function as parameter.
+    """
+
     # max commodity capacity, the source can generate
     MAX_ELEC = 160000
     MAX_GAS = 500000
+
+    src_inds = get_source_candidates(vertex, dim_x, dim_y, logic='sym')
     same_src = [[('Elec', S, MAX_ELEC), ('Gas', S, MAX_GAS)]
                 for S in src_inds]
-    flip = same_src.copy(); flip.reverse()
+    # _min_ix = min(same_src)
+    # _max_ix = max(same_src)
+    # central = [[('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+    #            for E, G in [(_min_ix, _max_ix), (_max_ix, _min_ix)]]
+    flip = same_src.copy()
+    flip.reverse()
     src_pairs_opposite = zip(src_inds, flip)
     opposite_src = [[('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
                     for E, G in src_pairs_opposite]
-    source_setups = same_src + opposite_src
-    vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
-                          source_setups)
-    for variant in [vertex, ]:
+    src_corners = get_source_candidates(vertex, dim_x, dim_y, logic='extrema')
+    extrema_src = [[('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+                   for E, G in src_corners]
+
+    source_setups = same_src + opposite_src + extrema_src
+    for sources in source_setups:
+        variant = vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
+                                        sources=sources, inplace=False)
         yield variant
 
 
@@ -140,8 +153,13 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
 
 
 def run_bunch(**kwargs):
-    """Run a bunch of optimizations and analysis automated.
-    """
+    """Run a bunch of optimizations and analysis automated. """
+    # Files Access | INITs
+    proj_name = 'runbunch'
+    base_directory = os.path.join('data', proj_name)
+    data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
+    profile_log = Series(name='{}-profiler'.format(proj_name))
+
     # DB connection
     _user = config['db']['user']
     _pass = config['db']['pass']
@@ -154,8 +172,8 @@ def run_bunch(**kwargs):
     # Input Data
     # ----------
     # Spatial
-    # vdf, edf = create_square_grid(num_edge_x=3, dx=1000)
-    # extend_edge_data(edf)
+    street_lengths = arange(50, 300, 25)
+    num_edge_xs = [1, 2]  # list(range(3, 10))
     # Non-spatial
     data = rivus.read_excel(data_spreadsheet)
     original_data = deepcopy(data)
@@ -169,69 +187,74 @@ def run_bunch(**kwargs):
     solver = SolverFactory(config['solver'])
     solver = setup_solver(solver)
     # Solve | Analyze | Store | Change | Repeat
-    for dx in arange(50, 300, 25):
+    for dx in street_lengths:
         for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
-            vdf, edf = create_square_grid(num_edge_x=3, dx=len_x, dy=len_y)
-            extend_edge_data(edf)
-            for _vdf in _source_variations(vdf):
-                for param in interesting_parameters:
-                    counter = 1
-                    for variant in _parameter_range(data[param['df_name']],
-                                                    **param['args']):
-                        print('{0}\n{1}\n{0}'.format('='*10, counter))
-                        counter = counter + 1
-                        data[param['df_name']] = variant
-                        # data = rivus.read_excel(data_spreadsheet)
-                        # prob = rivus.create_model(original_data, _vdf, edf)
-                        __vdf = deepcopy(_vdf)
-                        __edf = deepcopy(edf)
-                        _p_model = timenow()
-                        prob = rivus.create_model(data, __vdf, __edf)
-                        profile_log['model_creation'] = (timenow() - _p_model)
-                        _p_solve = timenow()
-                        results = solver.solve(prob, tee=True)
-                        if (results.solver.status != SolverStatus.ok):
-                            status = 'error'
-                            outcome = 'error'
-                        else:
-                            status = 'run'
-                            if (results.solver.termination_condition !=
-                                    TerminationCondition.optimal):
-                                outcome = 'optimum_not_reached'
+            for num_edge_x in num_edge_xs:
+                vdf, edf = create_square_grid(num_edge_x=num_edge_x, dx=len_x,
+                                              dy=len_y)
+                extend_edge_data(edf)
+                dim_x = num_edge_x + 1
+                dim_y = dim_x
+                for _vdf in _source_variations(vdf, dim_x, dim_y):
+                    for param in interesting_parameters:
+                        counter = 1
+                        for variant in _parameter_range(data[param['df_name']],
+                                                        **param['args']):
+                            print('{0}\n\t{1}x{1} grid - variant <{2}>\n{0}'
+                                  .format('=' * 10, num_edge_x, counter))
+                            counter = counter + 1
+                            data[param['df_name']] = variant
+                            __vdf = deepcopy(_vdf)
+                            __edf = deepcopy(edf)
+                            _p_model = timenow()
+                            prob = rivus.create_model(data, __vdf, __edf)
+                            profile_log['model_creation'] = (
+                                timenow() - _p_model)
+                            _p_solve = timenow()
+                            results = solver.solve(prob, tee=True)
+                            if (results.solver.status != SolverStatus.ok):
+                                status = 'error'
+                                outcome = 'error'
                             else:
-                                outcome = 'optimum'
-                        profile_log['solve'] = (timenow() - _p_solve)
-                        # Plot
-                        _p_plot = timenow()
-                        plotcomms = ['Gas', 'Heat', 'Elec']
-                        fig = fig3d(prob, plotcomms, linescale=8,
-                                    use_hubs=True)
-                        profile_log['3d_plot_prep'] = (timenow() - _p_plot)
-                        # Graph
-                        _p_graph = timenow()
-                        _, pmax, _, _ = get_constants(prob)
-                        graphs = to_nx(_vdf, edf, pmax)
-                        graph_results = minimal_graph_anal(graphs)
-                        profile_log['all_graph_related'] = (timenow() -
-                                                            _p_graph)
+                                status = 'run'
+                                if (results.solver.termination_condition !=
+                                        TerminationCondition.optimal):
+                                    outcome = 'optimum_not_reached'
+                                else:
+                                    outcome = 'optimum'
+                            profile_log['solve'] = (timenow() - _p_solve)
+                            # Plot
+                            _p_plot = timenow()
+                            plotcomms = ['Gas', 'Heat', 'Elec']
+                            fig = fig3d(prob, plotcomms, linescale=8,
+                                        use_hubs=True)
+                            profile_log['3d_plot_prep'] = (timenow() - _p_plot)
+                            # Graph
+                            _p_graph = timenow()
+                            _, pmax, _, _ = get_constants(prob)
+                            graphs = to_nx(_vdf, edf, pmax)
+                            graph_results = minimal_graph_anal(graphs)
+                            profile_log['all_graph_related'] = (timenow() -
+                                                                _p_graph)
 
-                        # Store
-                        this_run = {
-                            'comment': ('Testing runbunch.' +
-                                        'On 8GB, i5, x64 laptop.'),
-                            'status': status,
-                            'outcome': outcome,
-                            'runner': 'lnksz',
-                            'plot_dict': fig,
-                            'profiler': profile_log}
-                        rdb.store(engine, prob, run_data=this_run,
-                                  graph_results=graph_results)
-                        del __vdf
-                        del __edf
-                    data = original_data
+                            # Store
+                            this_run = {
+                                'comment': ('Testing runbunch.' +
+                                            'On 8GB, i5, x64 laptop.'),
+                                'status': status,
+                                'outcome': outcome,
+                                'runner': 'lnksz',
+                                'plot_dict': fig,
+                                'profiler': profile_log}
+                            rdb.store(engine, prob, run_data=this_run,
+                                      graph_results=graph_results)
+                            del __vdf
+                            del __edf
+                        data = original_data
 
 
 def run_loop():
+    """Small test function"""
     print('{0}\n{1}\n{0}'.format('='*10, '1'))
     data = rivus.read_excel(data_spreadsheet)
     vdf, edf = create_square_grid(num_edge_x=3, dx=1000)
@@ -258,12 +281,19 @@ def run_loop():
 
 
 if RUN_BUNCH:
-    # run_bunch()
-    run_loop()
+    run_bunch()
+    # run_loop()
     sys.exit()
 
 # loosly structered run parts
+proj_name = 'chessboard'
+datenow = datetime.now().strftime('%y%m%dT%H%M')
+result_dir = os.path.join('result', '{}-{}'.format(proj_name, datenow))
+profile_log = Series(name='runchess-profiler')
+
 if SOLVER:
+    base_directory = os.path.join('data', proj_name)
+    data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
     # Create Rivus Inputs
     creategrid = timenow()
     vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=3,
