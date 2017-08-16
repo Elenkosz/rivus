@@ -216,7 +216,11 @@ def run_bunch(**kwargs):
                             profile_log['model_creation'] = (
                                 timenow() - _p_model)
                             _p_solve = timenow()
-                            results = solver.solve(prob, tee=True)
+                            try:
+                                results = solver.solve(prob, tee=True)
+                            except Exception as solve_error:
+                                print(solve_error)
+
                             if (results.solver.status != SolverStatus.ok):
                                 status = 'error'
                                 outcome = 'error'
