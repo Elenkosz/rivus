@@ -244,8 +244,7 @@ def run_bunch(**kwargs):
 
                             # Store
                             this_run = {
-                                'comment': ('Testing runbunch.' +
-                                            'On 8GB, i5, x64 laptop.'),
+                                'comment': config['run_comment'],
                                 'status': status,
                                 'outcome': outcome,
                                 'runner': 'lnksz',
