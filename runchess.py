@@ -8,7 +8,6 @@ from time import time as timenow
 from rivus.main import rivus
 # =========================================================
 # Constants - Inputs
-lat, lon = [48.13512, 11.58198]  # You can copy LatLon into this list
 import json
 config = []
 with open('./config.json') as conf:
@@ -153,10 +152,10 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
         yield df
 
 
-def run_bunch(**kwargs):
+def run_bunch(use_email=False):
     """Run a bunch of optimizations and analysis automated. """
     # Files Access | INITs
-    proj_name = 'chessboard'
+    proj_name = 'runbunch'
     base_directory = os.path.join('data', proj_name)
     data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
     profile_log = Series(name='{}-profiler'.format(proj_name))
@@ -170,19 +169,44 @@ def run_bunch(**kwargs):
                      .format(_user, _pass, _host, _base))
     engine = create_engine(engine_string)
 
+    if use_email:
+        import smtplib
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+
+        robo_user = config['email']['s_user']
+        robo_pass = config['email']['s_pass']
+        recipient = config['email']['r_user']
+        smtp_addr = config['email']['smtp_addr']
+        smtp_port = config['email']['smtp_port']
+
+        smtp_msg = MIMEMultipart()
+        smtp_msg['From'] = robo_user
+        smtp_msg['To'] = recipient
+        smtp_msg['Subject'] = 'Run status update [rivus][simius]'
+
+        mailServer = smtplib.SMTP(smtp_addr, smtp_port)
+        try:
+            mailServer.ehlo()
+            mailServer.starttls()
+            mailServer.ehlo()
+            mailServer.login(robo_user, robo_pass)
+        except Exception as email_error:
+            print(email_error)
+
     # Input Data
     # ----------
     # Spatial
     street_lengths = arange(50, 300, 25)
-    num_edge_xs = list(range(3, 15))
+    num_edge_xs = list(range(5, 6))
     # Non-spatial
     data = rivus.read_excel(data_spreadsheet)
     original_data = deepcopy(data)
     interesting_parameters = [
         {'df_name': 'commodity',
-         'args': {'index': 'Elec',
+         'args': {'index': 'Heat',
                   'column': 'cost-inv-fix',
-                  'step': 0.1}},
+                  'lim_lo': 0.5, 'lim_up': 1.5, 'step': 0.25}},
         # {'df_name': 'commodity',
         #  'args': {'index': 'Elec',
         #           'column': 'cost-var',
@@ -213,13 +237,18 @@ def run_bunch(**kwargs):
                             __edf = deepcopy(edf)
                             _p_model = timenow()
                             prob = rivus.create_model(data, __vdf, __edf)
-                            profile_log['model_creation'] = (
-                                timenow() - _p_model)
+                            profile_log['model_creation'] = (timenow() -
+                                                             _p_model)
                             _p_solve = timenow()
                             try:
                                 results = solver.solve(prob, tee=True)
                             except Exception as solve_error:
                                 print(solve_error)
+                                if use_email:
+                                    message = repr(solve_error)
+                                    smtp_msg.attach(MIMEText(message))
+                                    mailServer.sendmail(robo_user, recipient,
+                                                        smtp_msg.as_string())
 
                             if (results.solver.status != SolverStatus.ok):
                                 status = 'error'
@@ -256,45 +285,40 @@ def run_bunch(**kwargs):
                                 'profiler': profile_log}
                             rdb.store(engine, prob, run_data=this_run,
                                       graph_results=graph_results)
-                            print('\tRun ended with: <{}>\n'.format(outcome))
                             del __vdf
                             del __edf
+                            print('\tRun ended with: <{}>\n'.format(outcome))
                         data = original_data
+                if use_email:
+                    status_txt = ('Finished iteration with edge number {}\n'
+                                  'did: [source-var, param-seek]'
+                                  .format(num_edge_x))
+                    smtp_msg.attach(MIMEText(status_txt))
+                    mailServer.sendmail(robo_user, recipient,
+                                        smtp_msg.as_string())
+        if use_email:
+            status_txt = ('Finished iteration with street lengths {}-{}\n'
+                          'did: [dim-shift, source-var, param-seek]'
+                          .format(len_x, len_y))
+            smtp_msg.attach(MIMEText(status_txt))
+            mailServer.sendmail(robo_user, recipient, smtp_msg.as_string())
 
-
-def run_loop():
-    """Small test function"""
-    print('{0}\n{1}\n{0}'.format('='*10, '1'))
-    data = rivus.read_excel(data_spreadsheet)
-    vdf, edf = create_square_grid(num_edge_x=3, dx=1000)
-    vert_init_commodities(vdf, ('Elec', 'Gas', 'Heat'),
-                          [('Elec', 0, 100000), ('Gas', 0, 5000)])
-    extend_edge_data(edf)
-    _edf = deepcopy(edf)
-    _vdf = deepcopy(vdf)
-    solver = SolverFactory(config['solver'])
-    solver = setup_solver(solver)
-    prob = rivus.create_model(data, vdf, edf)
-    solver.solve(prob, tee=True)
-
-    print('{0}\n{1}\n{0}'.format('='*10, '2'))
-    # data = rivus.read_excel(data_spreadsheet)
-    # vdf, edf = create_square_grid(num_edge_x=3, dx=1000)
-    # vert_init_commodities(vdf, ('Elec', 'Gas', 'Heat'),
-    #                       [('Elec', 0, 100000), ('Gas', 0, 5000)])
-    # extend_edge_data(edf)
-    solver = SolverFactory(config['solver'])
-    solver = setup_solver(solver)
-    prob = rivus.create_model(data, _vdf, _edf)
-    solver.solve(prob, tee=True)
+    if use_email:
+        status_txt = ('Finished run-bunch at {}\n'
+                      'did: [street-length, dim-shift, source-var, param-seek]'
+                      .format(timenow()))
+        smtp_msg.attach(MIMEText(status_txt))
+        mailServer.sendmail(robo_user, recipient, smtp_msg.as_string())
+        mailServer.close()
 
 
 if RUN_BUNCH:
-    run_bunch()
-    # run_loop()
+    run_bunch(use_email=True)
     sys.exit()
 
+
 # loosly structered run parts
+lat, lon = [48.13512, 11.58198]  # You can copy LatLon into this list
 proj_name = 'chessboard'
 datenow = datetime.now().strftime('%y%m%dT%H%M')
 result_dir = os.path.join('result', '{}-{}'.format(proj_name, datenow))
