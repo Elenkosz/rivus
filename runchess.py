@@ -174,15 +174,19 @@ def run_bunch(**kwargs):
     # ----------
     # Spatial
     street_lengths = arange(50, 300, 25)
-    num_edge_xs = list(range(3, 15))
+    num_edge_xs = list(range(10, 15))
     # Non-spatial
     data = rivus.read_excel(data_spreadsheet)
     original_data = deepcopy(data)
     interesting_parameters = [
         {'df_name': 'commodity',
-         'args': {'index': 'Elec',
+         'args': {'index': 'Heat',
                   'column': 'cost-inv-fix',
-                  'step': 0.1}},
+                  'lim_lo': 0.5, 'lim_up': 1.5, 'step': 0.25}},
+        {'df_name': 'commodity',
+         'args': {'index': 'Heat',
+                  'column': 'cost-fix',
+                  'lim_lo': 0.5, 'lim_up': 1.5, 'step': 0.25}}
         # {'df_name': 'commodity',
         #  'args': {'index': 'Elec',
         #           'column': 'cost-var',
