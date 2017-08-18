@@ -156,7 +156,7 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
 def run_bunch(**kwargs):
     """Run a bunch of optimizations and analysis automated. """
     # Files Access | INITs
-    proj_name = 'chessboard'
+    proj_name = 'runbunch'
     base_directory = os.path.join('data', proj_name)
     data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
     profile_log = Series(name='{}-profiler'.format(proj_name))
@@ -194,7 +194,7 @@ def run_bunch(**kwargs):
     ]
     # Model Creation
     solver = SolverFactory(config['solver'])
-    solver = setup_solver(solver, log_to_console=False)
+    solver = setup_solver(solver, log_to_console=False, guro_time_lim=14400)
     # Solve | Analyze | Store | Change | Repeat
     for dx in street_lengths:
         for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
@@ -215,11 +215,13 @@ def run_bunch(**kwargs):
                             data[param['df_name']] = variant
                             __vdf = deepcopy(_vdf)
                             __edf = deepcopy(edf)
+                            print('\tcreating model')
                             _p_model = timenow()
                             prob = rivus.create_model(data, __vdf, __edf)
                             profile_log['model_creation'] = (
                                 timenow() - _p_model)
                             _p_solve = timenow()
+                            print('\tsolving...')
                             try:
                                 results = solver.solve(prob, tee=True)
                             except Exception as solve_error:
