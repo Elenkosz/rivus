@@ -198,7 +198,11 @@ def run_bunch(use_email=False):
     # ----------
     # Spatial
     street_lengths = arange(50, 300, 25)
+<<<<<<< HEAD
     num_edge_xs = list(range(5, 6))
+=======
+    num_edge_xs = list(range(10, 15))
+>>>>>>> 896bacaa174dd9a9f396915851ce6054c00b024c
     # Non-spatial
     data = rivus.read_excel(data_spreadsheet)
     original_data = deepcopy(data)
@@ -207,6 +211,13 @@ def run_bunch(use_email=False):
          'args': {'index': 'Heat',
                   'column': 'cost-inv-fix',
                   'lim_lo': 0.5, 'lim_up': 1.5, 'step': 0.25}},
+<<<<<<< HEAD
+=======
+        {'df_name': 'commodity',
+         'args': {'index': 'Heat',
+                  'column': 'cost-fix',
+                  'lim_lo': 0.5, 'lim_up': 1.5, 'step': 0.25}}
+>>>>>>> 896bacaa174dd9a9f396915851ce6054c00b024c
         # {'df_name': 'commodity',
         #  'args': {'index': 'Elec',
         #           'column': 'cost-var',
@@ -214,7 +225,7 @@ def run_bunch(use_email=False):
     ]
     # Model Creation
     solver = SolverFactory(config['solver'])
-    solver = setup_solver(solver, log_to_console=False)
+    solver = setup_solver(solver, log_to_console=False, guro_time_lim=14400)
     # Solve | Analyze | Store | Change | Repeat
     for dx in street_lengths:
         for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
@@ -235,11 +246,13 @@ def run_bunch(use_email=False):
                             data[param['df_name']] = variant
                             __vdf = deepcopy(_vdf)
                             __edf = deepcopy(edf)
+                            print('\tcreating model')
                             _p_model = timenow()
                             prob = rivus.create_model(data, __vdf, __edf)
                             profile_log['model_creation'] = (timenow() -
                                                              _p_model)
                             _p_solve = timenow()
+                            print('\tsolving...')
                             try:
                                 results = solver.solve(prob, tee=True)
                             except Exception as solve_error:
