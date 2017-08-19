@@ -190,6 +190,8 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
         'hoverinfo': 'skip'
     }
     cap_groups = {}
+    if Hubs.empty:
+        use_hubs = False
 
     # Add dummies for legend formatting
     for com in comms:
