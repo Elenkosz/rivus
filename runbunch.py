@@ -33,11 +33,6 @@ import json
 config = []
 with open('./config.json') as conf:
     config = json.load(conf)
-SOLVER = config['use_solver']
-PLOTTER = config['make_plot']
-STORE_DB = config['store_db']
-GRAPHS = config['g_analysis']
-SPANNER = config['calc_minimal']
 
 
 def _source_variations(vertex, dim_x, dim_y):
@@ -140,6 +135,37 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
         yield df
 
 
+def _notify(message):
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    robo_user = config['email']['s_user']
+    robo_pass = config['email']['s_pass']
+    recipient = config['email']['r_user']
+    smtp_addr = config['email']['smtp_addr']
+    smtp_port = config['email']['smtp_port']
+
+    smtp_msg = MIMEMultipart()
+    smtp_msg['From'] = robo_user
+    smtp_msg['To'] = recipient
+    smtp_msg['Subject'] = 'Run status update [rivus][simius]'
+
+    mailServer = smtplib.SMTP(smtp_addr, smtp_port)
+    try:
+        mailServer.ehlo()
+        mailServer.starttls()
+        mailServer.ehlo()
+        mailServer.login(robo_user, robo_pass)
+    except Exception as email_error:
+        print(email_error)
+    else:
+        smtp_msg.attach(MIMEText(repr(message)))
+        mailServer.sendmail(robo_user, recipient, smtp_msg.as_string())
+        mailServer.close()
+
+
+
 def run_bunch(use_email=False):
     """Run a bunch of optimizations and analysis automated. """
     # Files Access | INITs
@@ -157,36 +183,11 @@ def run_bunch(use_email=False):
                      .format(_user, _pass, _host, _base))
     engine = create_engine(engine_string)
 
-    if use_email:
-        import smtplib
-        from email.mime.multipart import MIMEMultipart
-        from email.mime.text import MIMEText
-
-        robo_user = config['email']['s_user']
-        robo_pass = config['email']['s_pass']
-        recipient = config['email']['r_user']
-        smtp_addr = config['email']['smtp_addr']
-        smtp_port = config['email']['smtp_port']
-
-        smtp_msg = MIMEMultipart()
-        smtp_msg['From'] = robo_user
-        smtp_msg['To'] = recipient
-        smtp_msg['Subject'] = 'Run status update [rivus][simius]'
-
-        mailServer = smtplib.SMTP(smtp_addr, smtp_port)
-        try:
-            mailServer.ehlo()
-            mailServer.starttls()
-            mailServer.ehlo()
-            mailServer.login(robo_user, robo_pass)
-        except Exception as email_error:
-            print(email_error)
-
     # Input Data
     # ----------
     # Spatial
-    street_lengths = arange(50, 300, 25)
-    num_edge_xs = list(range(5, 6))
+    street_lengths = arange(50, 300, 50)
+    num_edge_xs = [5, 10]
     # Non-spatial
     data = read_excel(data_spreadsheet)
     original_data = deepcopy(data)
@@ -218,6 +219,8 @@ def run_bunch(use_email=False):
                 dim_y = dim_x
                 for _vdf in _source_variations(vdf, dim_x, dim_y):
                     for param in interesting_parameters:
+                        if num_edge_x == 5 and param['args']['column'] == 'cost-inv-fix':
+                            continue
                         counter = 1
                         for variant in _parameter_range(data[param['df_name']],
                                                         **param['args']):
@@ -238,10 +241,7 @@ def run_bunch(use_email=False):
                             except Exception as solve_error:
                                 print(solve_error)
                                 if use_email:
-                                    message = repr(solve_error)
-                                    smtp_msg.attach(MIMEText(message))
-                                    mailServer.sendmail(robo_user, recipient,
-                                                        smtp_msg.as_string())
+                                    _notify(solve_error)
 
                             if (results.solver.status != SolverStatus.ok):
                                 status = 'error'
@@ -263,10 +263,7 @@ def run_bunch(use_email=False):
                             except Exception as plot_error:
                                 print(plot_error)
                                 if use_email:
-                                    message = repr(plot_error)
-                                    smtp_msg.attach(MIMEText(message))
-                                    mailServer.sendmail(robo_user, recipient,
-                                                        smtp_msg.as_string())
+                                    _notify(plot_error)
                             profile_log['3d_plot_prep'] = (timenow() - _p_plot)
                             # Graph
                             _p_graph = timenow()
@@ -294,23 +291,17 @@ def run_bunch(use_email=False):
                     status_txt = ('Finished iteration with edge number {}\n'
                                   'did: [source-var, param-seek]'
                                   .format(num_edge_x))
-                    smtp_msg.attach(MIMEText(status_txt))
-                    mailServer.sendmail(robo_user, recipient,
-                                        smtp_msg.as_string())
+                    _notify(status_txt)
         if use_email:
             status_txt = ('Finished iteration with street lengths {}-{}\n'
                           'did: [dim-shift, source-var, param-seek]'
                           .format(len_x, len_y))
-            smtp_msg.attach(MIMEText(status_txt))
-            mailServer.sendmail(robo_user, recipient, smtp_msg.as_string())
-
+            _notify(status_txt)
     if use_email:
         status_txt = ('Finished run-bunch at {}\n'
                       'did: [street-length, dim-shift, source-var, param-seek]'
                       .format(timenow()))
-        smtp_msg.attach(MIMEText(status_txt))
-        mailServer.sendmail(robo_user, recipient, smtp_msg.as_string())
-        mailServer.close()
+        _notify(status_txt)
 
 
 if __name__ == '__main__':
