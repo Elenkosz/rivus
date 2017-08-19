@@ -186,8 +186,8 @@ def run_bunch(use_email=False):
     # Input Data
     # ----------
     # Spatial
-    street_lengths = arange(50, 300, 50)
-    num_edge_xs = [5, 10]
+    street_lengths = arange(50, 300, 25)
+    num_edge_xs = list(range(6, 8))
     # Non-spatial
     data = read_excel(data_spreadsheet)
     original_data = deepcopy(data)
