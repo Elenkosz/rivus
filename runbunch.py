@@ -13,9 +13,9 @@ from pyomo.opt import TerminationCondition
 from rivus.utils.prerun import setup_solver
 # GRID (STREET STRUCTURE)
 from rivus.gridder.create_grid import create_square_grid
-from rivus.gridder.create_grid import get_source_candidates
 from rivus.gridder.extend_grid import extend_edge_data
 from rivus.gridder.extend_grid import vert_init_commodities
+from rivus.gridder.create_grid import get_source_candidates
 # PLOT
 # import matplotlib.pyplot as plt
 from rivus.io.plot import fig3d
@@ -230,8 +230,7 @@ def run_bunch(use_email=False):
                             print('\tcreating model')
                             _p_model = timenow()
                             prob = create_model(data, __vdf, __edf)
-                            profile_log['model_creation'] = (timenow() -
-                                                             _p_model)
+                            profile_log['model_creation'] = (timenow() - _p_model)
                             _p_solve = timenow()
                             print('\tsolving...')
                             try:
@@ -258,8 +257,16 @@ def run_bunch(use_email=False):
                             # Plot
                             _p_plot = timenow()
                             plotcomms = ['Gas', 'Heat', 'Elec']
-                            fig = fig3d(prob, plotcomms, linescale=8,
-                                        use_hubs=True)
+                            try:
+                                fig = fig3d(prob, plotcomms, linescale=8,
+                                            use_hubs=True)
+                            except Exception as plot_error:
+                                print(plot_error)
+                                if use_email:
+                                    message = repr(plot_error)
+                                    smtp_msg.attach(MIMEText(message))
+                                    mailServer.sendmail(robo_user, recipient,
+                                                        smtp_msg.as_string())
                             profile_log['3d_plot_prep'] = (timenow() - _p_plot)
                             # Graph
                             _p_graph = timenow()
