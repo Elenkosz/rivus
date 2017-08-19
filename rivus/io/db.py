@@ -52,12 +52,16 @@ def init_run(engine, runner='Havasi', start_ts=None, status='prepared',
     if start_ts is None:
         start_ts = datetime.now()
 
-    run_id = None
-    connection = engine.raw_connection()
     if profiler is not None:
         profiler = profiler.to_json()
+
     if plot_dict is not None:
         plot = json.dumps(plot_dict)
+    else:
+        plot = None
+
+    run_id = None
+    connection = engine.raw_connection()
     try:
         with connection.cursor() as curs:
             curs.execute("""
