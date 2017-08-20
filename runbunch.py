@@ -160,10 +160,11 @@ def _notify(message):
     except Exception as email_error:
         print(email_error)
     else:
-        smtp_msg.attach(MIMEText(repr(message)))
+        if not isinstance(message, str):
+            message = repr(message)
+        smtp_msg.attach(MIMEText(message))
         mailServer.sendmail(robo_user, recipient, smtp_msg.as_string())
         mailServer.close()
-
 
 
 def run_bunch(use_email=False):
@@ -219,7 +220,8 @@ def run_bunch(use_email=False):
                 dim_y = dim_x
                 for _vdf in _source_variations(vdf, dim_x, dim_y):
                     for param in interesting_parameters:
-                        if num_edge_x == 5 and param['args']['column'] == 'cost-inv-fix':
+                        if (num_edge_x == 5 and
+                                param['args']['column'] == 'cost-inv-fix'):
                             continue
                         counter = 1
                         for variant in _parameter_range(data[param['df_name']],
@@ -233,7 +235,8 @@ def run_bunch(use_email=False):
                             print('\tcreating model')
                             _p_model = timenow()
                             prob = create_model(data, __vdf, __edf)
-                            profile_log['model_creation'] = (timenow() - _p_model)
+                            profile_log['model_creation'] = (
+                                timenow() - _p_model)
                             _p_solve = timenow()
                             print('\tsolving...')
                             try:
@@ -267,9 +270,14 @@ def run_bunch(use_email=False):
                             profile_log['3d_plot_prep'] = (timenow() - _p_plot)
                             # Graph
                             _p_graph = timenow()
-                            _, pmax, _, _ = get_constants(prob)
-                            graphs = to_nx(_vdf, edf, pmax)
-                            graph_results = minimal_graph_anal(graphs)
+                            try:
+                                _, pmax, _, _ = get_constants(prob)
+                                graphs = to_nx(_vdf, edf, pmax)
+                                graph_results = minimal_graph_anal(graphs)
+                            except Exception as graph_error:
+                                print(graph_error)
+                                if use_email:
+                                    _notify(graph_error)
                             profile_log['all_graph_related'] = (timenow() -
                                                                 _p_graph)
 
@@ -281,20 +289,31 @@ def run_bunch(use_email=False):
                                 'runner': 'lnksz',
                                 'plot_dict': fig,
                                 'profiler': profile_log}
-                            rdb.store(engine, prob, run_data=this_run,
-                                      graph_results=graph_results)
+                            try:
+                                rdb.store(engine, prob, run_data=this_run,
+                                          graph_results=graph_results)
+                            except Exception as db_error:
+                                print(db_error)
+                                if use_email:
+                                    _notify(db_error)
                             del __vdf
                             del __edf
                             print('\tRun ended with: <{}>\n'.format(outcome))
+
                         data = original_data
                 if use_email:
                     status_txt = ('Finished iteration with edge number {}\n'
-                                  'did: [source-var, param-seek]'
-                                  .format(num_edge_x))
+                                  'did: [source-var, param-seek]\n'
+                                  'from [street-length, dim-shift, source-var,'
+                                  ' param-seek]'
+                                  'dx:{}, dy:{}'
+                                  .format(num_edge_x, len_x, len_y))
                     _notify(status_txt)
         if use_email:
             status_txt = ('Finished iteration with street lengths {}-{}\n'
-                          'did: [dim-shift, source-var, param-seek]'
+                          'did: [dim-shift, source-var, param-seek]\n'
+                          'from [street-length, dim-shift, source-var,'
+                          ' param-seek]'
                           .format(len_x, len_y))
             _notify(status_txt)
     if use_email:
