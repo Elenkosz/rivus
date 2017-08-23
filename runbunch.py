@@ -60,14 +60,18 @@ def _source_variations(vertex, dim_x, dim_y):
     MAX_GAS = 500000
 
     src_inds = get_source_candidates(vertex, dim_x, dim_y, logic='sym')
-    source_setups = [[('Elec', S, MAX_ELEC), ('Gas', S, MAX_GAS)]
+    if False:
+        source_setups = [[('Elec', S, MAX_ELEC), ('Gas', S, MAX_GAS)]
                      for S in src_inds]
+    else:
+        source_setups = []
     flip = src_inds.copy()
     flip.reverse()
     src_pairs_opposite = zip(src_inds, flip)
     for E, G in src_pairs_opposite:
         this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
         if this_srcs not in source_setups:
+            break
             source_setups.append(this_srcs)
 
     src_corners = get_source_candidates(vertex, dim_x, dim_y, logic='extrema')
@@ -188,7 +192,7 @@ def run_bunch(use_email=False):
     # ----------
     # Spatial
     street_lengths = arange(50, 300, 25)
-    num_edge_xs = list(range(6, 8))
+    num_edge_xs = [10, ]
     # Non-spatial
     data = read_excel(data_spreadsheet)
     original_data = deepcopy(data)
@@ -220,9 +224,6 @@ def run_bunch(use_email=False):
                 dim_y = dim_x
                 for _vdf in _source_variations(vdf, dim_x, dim_y):
                     for param in interesting_parameters:
-                        if (num_edge_x == 5 and
-                                param['args']['column'] == 'cost-inv-fix'):
-                            continue
                         counter = 1
                         for variant in _parameter_range(data[param['df_name']],
                                                         **param['args']):
