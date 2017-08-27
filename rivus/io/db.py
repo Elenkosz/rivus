@@ -892,3 +892,18 @@ def df_from_table(engine, fname, run_id):
                       "Returning an empty DataFrame".format(fname))
         df = DataFrame()
     return df
+
+
+def get_plot_dict(engine, run_id):
+    string_query = """SELECT plot FROM RUN WHERE run_id = %s;"""
+
+    connection = engine.raw_connection()
+    plot_dict = {}
+    try:
+        with connection.cursor() as curs:
+            curs.execute(string_query, (run_id, ))
+            plot_dict = curs.fetchone()[0]
+            connection.commit()
+    finally:
+        connection.close()
+        return plot_dict
