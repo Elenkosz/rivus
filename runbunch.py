@@ -65,23 +65,25 @@ def _source_variations(vertex, dim_x, dim_y):
     src_inds = get_source_candidates(vertex, dim_x, dim_y, logic='sym')
     if False:
         source_setups = [[('Elec', S, MAX_ELEC), ('Gas', S, MAX_GAS)]
-                     for S in src_inds]
+                         for S in src_inds]
     else:
         source_setups = []
-    flip = src_inds.copy()
-    flip.reverse()
-    src_pairs_opposite = zip(src_inds, flip)
-    for E, G in src_pairs_opposite:
-        this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
-        if this_srcs not in source_setups:
-            break
-            source_setups.append(this_srcs)
 
-    src_corners = get_source_candidates(vertex, dim_x, dim_y, logic='extrema')
-    for E, G in src_corners:
-        this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
-        if this_srcs not in source_setups:
-            source_setups.append(this_srcs)
+    if True:
+        flip = src_inds.copy()
+        flip.reverse()
+        src_pairs_opposite = zip(src_inds, flip)
+        for E, G in src_pairs_opposite:
+            this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+            if this_srcs not in source_setups:
+                source_setups.append(this_srcs)
+
+    if False:
+        src_corners = get_source_candidates(vertex, dim_x, dim_y, logic='extrema')
+        for E, G in src_corners:
+            this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+            if this_srcs not in source_setups:
+                source_setups.append(this_srcs)
 
     for sources in source_setups:
         print('\nCurrent sources: \n{}'.format(sources))
@@ -184,8 +186,8 @@ def run_bunch(use_email=False):
     # Input Data
     # ----------
     # Spatial
-    street_lengths = arange(50, 300, 25)
-    num_edge_xs = [10, ]
+    street_lengths = arange(50, 300, 50)
+    num_edge_xs = [5, ]
     # Non-spatial
     data = read_excel(data_spreadsheet)
     original_data = deepcopy(data)
@@ -193,11 +195,11 @@ def run_bunch(use_email=False):
         {'df_name': 'commodity',
          'args': {'index': 'Heat',
                   'column': 'cost-inv-fix',
-                  'lim_lo': 0.5, 'lim_up': 1.5, 'step': 0.25}},
+                  'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}},
         {'df_name': 'commodity',
          'args': {'index': 'Heat',
                   'column': 'cost-fix',
-                  'lim_lo': 0.5, 'lim_up': 1.5, 'step': 0.25}}
+                  'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}}
         # {'df_name': 'commodity',
         #  'args': {'index': 'Elec',
         #           'column': 'cost-var',
