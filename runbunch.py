@@ -17,10 +17,10 @@ from rivus.gridder.create_grid import create_square_grid
 from rivus.gridder.extend_grid import extend_edge_data
 from rivus.gridder.extend_grid import vert_init_commodities
 from rivus.gridder.create_grid import get_source_candidates
+# PARAMETER-SPACE
+from rivus.utils.runmany import parameter_range
 # PLOT
-# import matplotlib.pyplot as plt
 from rivus.io.plot import fig3d
-# from plotly.offline import plot as plot3d
 # DATABASE
 from sqlalchemy import create_engine
 from rivus.io import db as rdb
@@ -79,7 +79,8 @@ def _source_variations(vertex, dim_x, dim_y):
                 source_setups.append(this_srcs)
 
     if False:
-        src_corners = get_source_candidates(vertex, dim_x, dim_y, logic='extrema')
+        src_corners = get_source_candidates(
+            vertex, dim_x, dim_y, logic='extrema')
         for E, G in src_corners:
             this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
             if this_srcs not in source_setups:
@@ -90,71 +91,6 @@ def _source_variations(vertex, dim_x, dim_y):
         variant = vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
                                         sources=sources, inplace=False)
         yield variant
-
-
-def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
-                     step=None, zero_root=None):
-    """Yield values of the parameter in a given range
-    Parameters
-    ----------
-    data_df : DataFrame
-        Original data frame, where the target parameter can be found.
-    index : valid pandas DataFrame row label
-        DataFrame .loc parameter to locate the parameter value.
-        E.g.: ['Gas power plant', 'CO2', 'Out'] or 'Gas'
-    column : str
-        Label of the column, where the parameter is.
-        E.g.: 'ratio' or 'cap-max'
-    lim_lo : None, optional
-        Proportional parameter. If omitted, 90% of the original.
-    lim_up : None, optional
-        Proportional parameter. If omitted 110% of the original.
-    step : None, optional
-        Proportional parameter. The difference between
-        two following yielded values.
-    zero_root : None, optional
-        If the selected parameter is 0, then the default method using
-        proportions will fail.
-        Use this value to set the root for the parameter range.
-
-    Returns
-    -------
-    DataFrame
-        A modified version of xls[df_name]
-    """
-    df = data_df.copy()  # Leave the original untouched
-    is_multi = len(df.index.names) > 1
-    if is_multi:
-        original = df.loc[tuple(index)][column]
-    else:
-        original = df.loc[index][column]
-
-    if original == 0 and zero_root is not None:
-        original = zero_root
-        # TODO Add warning if needed.
-        print('Parameter range is derived from zero_root: {}'
-              .format(zero_root))
-    elif original == 0 and zero_root is None:
-        # TODO Add warning if needed.
-        print('Parameter range is just the original parameter (0)!')
-        return df
-
-    LO_PROP = 0.9
-    UP_PROP = 1.1
-    STEP_PROP = 0.05
-    lim_lo = LO_PROP * original if lim_lo is None else lim_lo * original
-    lim_up = UP_PROP * original if lim_up is None else lim_up * original
-    step = STEP_PROP * original if step is None else step * original
-    if step == 0:
-        step = None
-    print('\n> Parameter {} was: {} now changing from {} to {} by {}'.
-          format(column, original, lim_lo, lim_up, step))
-    for mod in arange(lim_lo, lim_up, step):
-        if is_multi:
-            df.loc[tuple(index)][column] = mod
-        else:
-            df.loc[index, column] = mod
-        yield df
 
 
 def run_bunch(use_email=False):
@@ -186,7 +122,7 @@ def run_bunch(use_email=False):
     # Input Data
     # ----------
     # Spatial
-    street_lengths = arange(50, 300, 50)
+    street_lengths = arange(50, 300, 100)
     num_edge_xs = [5, ]
     # Non-spatial
     data = read_excel(data_spreadsheet)
@@ -208,7 +144,7 @@ def run_bunch(use_email=False):
     # Model Creation
     solver = SolverFactory(config['solver'])
     solver = setup_solver(solver, log_to_console=False, guro_time_lim=14400)
-    # Solve | Analyze | Store | Change | Repeat
+    # Solve | Analyse | Store | Change | Repeat
     for dx in street_lengths:
         for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
             run_summary = 'Run with x:{}, y:{}'.format(len_x, len_y)
@@ -225,8 +161,8 @@ def run_bunch(use_email=False):
                               'dx:{1}, dy:{2}, #e:{3}, src:-, par:{4}\n'
                               .format('=' * 10, len_x, len_y, num_edge_x, para_name))
                         counter = 1
-                        for variant in _parameter_range(data[param['df_name']],
-                                                        **param['args']):
+                        for variant in parameter_range(data[param['df_name']],
+                                                       **param['args']):
                             changed = (variant.loc[param['args']['index']]
                                        [param['args']['column']])
                             print('variant <{0}>:{1}'.format(counter, changed))
@@ -250,7 +186,8 @@ def run_bunch(use_email=False):
                                 print(solve_error)
                                 if use_email:
                                     sub = run_summary + '[rivus][solve-error]'
-                                    email_me(solve_error, subject=sub, **email_setup)
+                                    email_me(solve_error, subject=sub,
+                                             **email_setup)
                             if (results.solver.status != SolverStatus.ok):
                                 status = 'error'
                                 outcome = 'error'
@@ -272,7 +209,8 @@ def run_bunch(use_email=False):
                                 print(plot_error)
                                 if use_email:
                                     sub = run_summary + '[rivus][plot-error]'
-                                    email_me(plot_error, subject=sub, **email_setup)
+                                    email_me(plot_error, subject=sub,
+                                             **email_setup)
                             profile_log['3d_plot_prep'] = (timenow() - _p_plot)
                             # Graph
                             _p_graph = timenow()
@@ -284,7 +222,8 @@ def run_bunch(use_email=False):
                                 print(graph_error)
                                 if use_email:
                                     sub = run_summary + '[rivus][graph-error]'
-                                    email_me(graph_error, subject=sub, **email_setup)
+                                    email_me(graph_error, subject=sub,
+                                             **email_setup)
                             profile_log['all_graph_related'] = (
                                 timenow() - _p_graph)
                             # Store
@@ -302,7 +241,8 @@ def run_bunch(use_email=False):
                                 print(db_error)
                                 if use_email:
                                     sub = run_summary + '[rivus][db-error]'
-                                    email_me(db_error, subject=sub, **email_setup)
+                                    email_me(db_error, subject=sub,
+                                             **email_setup)
                             del __vdf
                             del __edf
                             del __data
