@@ -51,13 +51,16 @@ datenow = datetime.now().strftime('%y%m%dT%H%M')
 result_dir = os.path.join('result', '{}-{}'.format(proj_name, datenow))
 profile_log = Series(name='runchess-profiler')
 
+DX = 250
+DY = 125
+
 if SOLVER:
     base_directory = os.path.join('data', proj_name)
     data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
     # Create Rivus Inputs
     creategrid = timenow()
-    vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=3,
-                                      dx=1000)
+    vertex, edge = create_square_grid(origo_latlon=(lat, lon), num_edge_x=2,
+                                      dx=DX, dy=DY, noise_prop=0.1)
     profile_log['grid_creation'] = round(timenow() - creategrid, 2)
 
     extendgrid = timenow()
@@ -83,8 +86,8 @@ if SOLVER:
 
     # Handling results
     # ---- create result directory if not existing already
-    # if not os.path.exists(result_dir):
-    #     os.makedirs(result_dir)
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
 
     # print('Saving pickle...')
     # rivuspickle = timenow()
@@ -109,7 +112,8 @@ if PLOTTER:
     print("Plotting...")
     myprintstart = timenow()
     plotcomms = ['Gas', 'Heat', 'Elec']
-    fig = fig3d(prob, plotcomms, linescale=8, usehubs=True)
+    fig = fig3d(prob, linescale=8, comms=plotcomms, use_hubs=True,
+                dz=(0.25 * DX))
     if SOLVER:
         plot3d(fig, filename=os.path.join(result_dir, 'rivus_result.html'))
     else:
