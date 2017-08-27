@@ -27,6 +27,8 @@ from rivus.io import db as rdb
 from rivus.graph.to_graph import to_nx
 from rivus.graph.analysis import minimal_graph_anal
 from rivus.main.rivus import read_excel, create_model, get_constants
+# EMAIL NOTIFICATION
+from rivus.utils.notify import email_me
 # =========================================================
 # Constants - Inputs
 import json
@@ -137,38 +139,6 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
         yield df
 
 
-def _notify(message):
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
-    robo_user = config['email']['s_user']
-    robo_pass = config['email']['s_pass']
-    recipient = config['email']['r_user']
-    smtp_addr = config['email']['smtp_addr']
-    smtp_port = config['email']['smtp_port']
-
-    smtp_msg = MIMEMultipart()
-    smtp_msg['From'] = robo_user
-    smtp_msg['To'] = recipient
-    smtp_msg['Subject'] = 'Run status update [rivus][simius]'
-
-    mailServer = smtplib.SMTP(smtp_addr, smtp_port)
-    try:
-        mailServer.ehlo()
-        mailServer.starttls()
-        mailServer.ehlo()
-        mailServer.login(robo_user, robo_pass)
-    except Exception as email_error:
-        print(email_error)
-    else:
-        if not isinstance(message, str):
-            message = repr(message)
-        smtp_msg.attach(MIMEText(message))
-        mailServer.sendmail(robo_user, recipient, smtp_msg.as_string())
-        mailServer.close()
-
-
 def run_bunch(use_email=False):
     """Run a bunch of optimizations and analysis automated. """
     # Files Access | INITs
@@ -176,6 +146,15 @@ def run_bunch(use_email=False):
     base_directory = os.path.join('data', proj_name)
     data_spreadsheet = os.path.join(base_directory, 'data.xlsx')
     profile_log = Series(name='{}-profiler'.format(proj_name))
+
+    # Email connection
+    email_setup = {
+        'sender': config['email']['s_user'],
+        'send_pass': config['email']['s_pass'],
+        'recipient': config['email']['r_user'],
+        'smtp_addr': config['email']['smtp_addr'],
+        'smtp_port': config['email']['smtp_port']
+    }
 
     # DB connection
     _user = config['db']['user']
@@ -214,6 +193,7 @@ def run_bunch(use_email=False):
     # Solve | Analyze | Store | Change | Repeat
     for dx in street_lengths:
         for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
+            run_summary = 'Run with x:{}, y:{}'.format(len_x, len_y)
             for num_edge_x in num_edge_xs:
                 vdf, edf = create_square_grid(num_edge_x=num_edge_x, dx=len_x,
                                               dy=len_y)
@@ -222,11 +202,16 @@ def run_bunch(use_email=False):
                 dim_y = dim_x
                 for _vdf in _source_variations(vdf, dim_x, dim_y):
                     for param in interesting_parameters:
+                        para_name = param['args']['column']
+                        print('{0}\n{3}x{3} grid\t'
+                              'dx:{1}, dy:{2}, #e:{3}, src:-, par:{4}\n'
+                              .format('=' * 10, len_x, len_y, num_edge_x, para_name))
                         counter = 1
                         for variant in _parameter_range(data[param['df_name']],
                                                         **param['args']):
-                            print('{0}\n\t{1}x{1} grid - variant <{2}>\n{0}'
-                                  .format('=' * 10, num_edge_x, counter))
+                            changed = (variant.loc[param['args']['index']]
+                                       [param['args']['column']])
+                            print('variant <{0}>:{1}'.format(counter, changed))
                             counter = counter + 1
                             data[param['df_name']] = variant
                             __vdf = deepcopy(_vdf)
@@ -243,8 +228,8 @@ def run_bunch(use_email=False):
                             except Exception as solve_error:
                                 print(solve_error)
                                 if use_email:
-                                    _notify(solve_error)
-
+                                    sub = run_summary + '[rivus][solve-error]'
+                                    email_me(solve_error, subject=sub, **email_setup)
                             if (results.solver.status != SolverStatus.ok):
                                 status = 'error'
                                 outcome = 'error'
@@ -265,7 +250,8 @@ def run_bunch(use_email=False):
                             except Exception as plot_error:
                                 print(plot_error)
                                 if use_email:
-                                    _notify(plot_error)
+                                    sub = run_summary + '[rivus][plot-error]'
+                                    email_me(plot_error, subject=sub, **email_setup)
                             profile_log['3d_plot_prep'] = (timenow() - _p_plot)
                             # Graph
                             _p_graph = timenow()
@@ -276,10 +262,10 @@ def run_bunch(use_email=False):
                             except Exception as graph_error:
                                 print(graph_error)
                                 if use_email:
-                                    _notify(graph_error)
-                            profile_log['all_graph_related'] = (timenow() -
-                                                                _p_graph)
-
+                                    sub = run_summary + '[rivus][graph-error]'
+                                    email_me(graph_error, subject=sub, **email_setup)
+                            profile_log['all_graph_related'] = (
+                                timenow() - _p_graph)
                             # Store
                             this_run = {
                                 'comment': config['run_comment'],
@@ -294,7 +280,8 @@ def run_bunch(use_email=False):
                             except Exception as db_error:
                                 print(db_error)
                                 if use_email:
-                                    _notify(db_error)
+                                    sub = run_summary + '[rivus][db-error]'
+                                    email_me(db_error, subject=sub, **email_setup)
                             del __vdf
                             del __edf
                             print('\tRun ended with: <{}>\n'.format(outcome))
@@ -307,19 +294,23 @@ def run_bunch(use_email=False):
                                   ' param-seek]'
                                   'dx:{}, dy:{}'
                                   .format(num_edge_x, len_x, len_y))
-                    _notify(status_txt)
+                    sub = run_summary + '[rivus][finish-a-src]'
+                    email_me(status_txt, subject=sub, **email_setup)
         if use_email:
             status_txt = ('Finished iteration with street lengths {}-{}\n'
                           'did: [dim-shift, source-var, param-seek]\n'
                           'from [street-length, dim-shift, source-var,'
                           ' param-seek]'
                           .format(len_x, len_y))
-            _notify(status_txt)
+            sub = run_summary + '[rivus][finish-a-len-combo]'
+            email_me(status_txt, subject=sub, **email_setup)
     if use_email:
         status_txt = ('Finished run-bunch at {}\n'
                       'did: [street-length, dim-shift, source-var, param-seek]'
-                      .format(timenow()))
-        _notify(status_txt)
+                      .format(datetime.now().strftime('%y%m%dT%H%M')))
+        sub = run_summary + '[rivus][finish-run]'
+        email_me(status_txt, subject=sub, **email_setup)
+    print('End of runbunch.')
 
 
 if __name__ == '__main__':
