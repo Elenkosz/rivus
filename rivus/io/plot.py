@@ -220,7 +220,7 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
                 'color': COLORS[com]
             }
         }
-        capacities.append(cap_groups[com])  # it a convinience link
+        capacities.append(cap_groups[com])  # it's a convinience link
 
     if use_hubs:
         hub_legends = []
@@ -233,13 +233,19 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
         for com in comms:
             is_built_comm = com in Pmax.columns.values
             if is_built_comm:
-                comm_cap = Pmax.xs(v1v2)[com]
+                comm_cap = Pmax.get_value(v1v2, com)
+                if comm_cap > 0:
+                    is_built_edge = True
+                else:
+                    is_built_edge = False
+
+            if is_built_comm and is_built_edge:
                 lwidth = _linewidth(comm_cap, linescale)
                 dash = 'solid'
-            else:
+            elif not is_built_comm or not is_built_edge:
                 comm_cap = 0
-                lwidth = 3
-                dash = 'dot'
+                lwidth = 2
+                dash = 'dash'
             capacities.append(
                 dict(oneline, x=xs, y=ys, z=[comm_zs[com]] * len(xs),
                      legendgroup=com, name=com, showlegend=False,
@@ -267,7 +273,8 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
                         is_first = legend not in hub_legends
                         if is_first:
                             hub_legends.append(legend)
-                        produced_txt = produced.to_string(header=False)
+                        produced_txt = (produced.to_string(header=False)
+                                        .replace('\n', '<br>'))
                         annot_text = '{0}:<br>{1}'.format(hub, produced_txt)
                         annots.append({
                             'type': 'scatter3d',
@@ -356,13 +363,18 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
     if comms is None:
         comm_order = {  # values set the sort order
             'Demand': 0,
-            'Elec': 1,
-            'Cool': 3,
-            'Heat': 5,
-            'Gas': 10,
-            'CO2': 15,
+            'Gas': 5,
+            'CO2': 10,
+            'Heat': 15,
+            'Elec': 20,
+            'Cool': 25,
         }
+        # Drop all 0 columns in Pmax
+        for column in Pmax:
+            if all(Pmax[column] == 0):
+                del Pmax[column]
         comms = Pmax.columns.values
+
         proc_used = Kappa_process.columns.values
         if len(proc_used):
             proc_comms = (prob.r_in.loc[proc_used].index
@@ -425,10 +437,10 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
                 'visible': False,
                 # 'range' : [0, comm_zs[-1] + dz]
             },
-            'aspectmode': 'manual',
-            'aspectratio': {
-                'x': 1, 'y': 1, 'z': .6
-            }
+            'aspectmode': 'data',
+            # 'aspectratio': {
+            #     'x': 1, 'y': 1, 'z': .6
+            # }
         }
         # 'width' : 700
     }
