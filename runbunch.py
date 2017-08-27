@@ -6,7 +6,7 @@ from numpy import arange
 from pandas import Series
 
 # SOLVER
-import pyomo.environ  # although is not used direktly, is needee by pyomo
+import pyomo.environ  # although it is not used directly, it is needed by pyomo
 from pyomo.opt.base import SolverFactory
 from pyomo.opt import SolverStatus
 from pyomo.opt import TerminationCondition
@@ -52,7 +52,7 @@ def _source_variations(vertex, dim_x, dim_y):
     Yields
     ------
     Dataframe
-        Ready to be fead into the create_model() function as parameter.
+        Ready to be fed into the create_model() function as parameter.
     """
 
     # max commodity capacity, the source can generate
@@ -88,14 +88,12 @@ def _source_variations(vertex, dim_x, dim_y):
 
 
 def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
-                     step=None):
+                     step=None, zero_root=None):
     """Yield values of the parameter in a given range
     Parameters
     ----------
-    xls: dict of DataFrames
-        As returned from rivus.main.read_excel
-    data_df : str
-        To select DataFrame from xls
+    data_df : DataFrame
+        Original data frame, where the target parameter can be found.
     index : valid pandas DataFrame row label
         DataFrame .loc parameter to locate the parameter value.
         E.g.: ['Gas power plant', 'CO2', 'Out'] or 'Gas'
