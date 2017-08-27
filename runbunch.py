@@ -110,18 +110,33 @@ def _parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
     step : None, optional
         Proportional parameter. The difference between
         two following yielded values.
+    zero_root : None, optional
+        If the selected parameter is 0, then the default method using
+        proportions will fail.
+        Use this value to set the root for the parameter range.
 
     Returns
     -------
     DataFrame
         A modified version of xls[df_name]
     """
-    df = data_df  # Naming
+    df = data_df.copy()  # Leave the original untouched
     is_multi = len(df.index.names) > 1
     if is_multi:
         original = df.loc[tuple(index)][column]
     else:
         original = df.loc[index][column]
+
+    if original == 0 and zero_root is not None:
+        original = zero_root
+        # TODO Add warning if needed.
+        print('Parameter range is derived from zero_root: {}'
+              .format(zero_root))
+    elif original == 0 and zero_root is None:
+        # TODO Add warning if needed.
+        print('Parameter range is just the original parameter (0)!')
+        return df
+
     LO_PROP = 0.9
     UP_PROP = 1.1
     STEP_PROP = 0.05
@@ -214,12 +229,15 @@ def run_bunch(use_email=False):
                                        [param['args']['column']])
                             print('variant <{0}>:{1}'.format(counter, changed))
                             counter = counter + 1
-                            data[param['df_name']] = variant
+                            # Use temporal local versions.
+                            # As create_model is destructive. See Issue #31.
                             __vdf = deepcopy(_vdf)
                             __edf = deepcopy(edf)
+                            __data = data.copy()
+                            __data[param['df_name']] = variant
                             print('\tcreating model')
                             _p_model = timenow()
-                            prob = create_model(data, __vdf, __edf)
+                            prob = create_model(__data, __vdf, __edf)
                             profile_log['model_creation'] = (
                                 timenow() - _p_model)
                             _p_solve = timenow()
@@ -285,6 +303,7 @@ def run_bunch(use_email=False):
                                     email_me(db_error, subject=sub, **email_setup)
                             del __vdf
                             del __edf
+                            del __data
                             print('\tRun ended with: <{}>\n'.format(outcome))
 
                         data = original_data
