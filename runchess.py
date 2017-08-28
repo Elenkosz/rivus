@@ -1,4 +1,4 @@
-"""pLAYGROUND script with the feauteres added by lnksz"""
+"""PLAYGROUND script with the feauteres added by lnksz"""
 
 
 import os
