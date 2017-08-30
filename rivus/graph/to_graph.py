@@ -9,7 +9,7 @@ igraph:
     + C based with python wrappers.
     + Mature library package.
     + Included for speed and so for scalability.
-    × Docs are OK.
+    x Docs are OK.
     - Windows install can be somewhat tedious (with unofficial wheel files).
       But it works.
 graph-tools: (maybe added in the future)
