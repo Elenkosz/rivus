@@ -15,7 +15,8 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode'
+    'sphinx.ext.viewcode',
+    'sphinx.ext.todo'
 ]
 
 #templates_path = ['_templates']
@@ -39,6 +40,7 @@ if not on_rtd:
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
+todo_include_todos = True
 # LaTeX output
 
 latex_elements = {
