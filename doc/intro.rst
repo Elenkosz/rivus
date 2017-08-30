@@ -28,7 +28,6 @@ Merge was done only for better spacing in the documentation.
 
 .. figure:: img/rivus-caps.png
     :scale: 100%
-    :figwidth: image
 
 Unified rivus capacity output of a smaller city.
 
