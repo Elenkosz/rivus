@@ -84,6 +84,28 @@ def _linewidth(value, scale=1.0):
     return math.sqrt(value) * 0.05 * scale
 
 
+def _add_process(prob, bm, comm_zs, source, proc, hub):
+    proc_nohub = proc.copy()
+    for hub_name in hub.columns:
+        del proc_nohub[hub_name]
+    proc_nohub = proc_nohub[(proc_nohub.T != 0).any()]
+    proc
+
+    try:
+        sources = source.max(axis=1)
+    except KeyError:
+        sources = Series()
+    r_in = prob.r_in.xs(commodity, level='Commodity')
+    r_out = prob.r_out.xs(commodity, level='Commodity')
+    # multiply input/output ratios with capacities and drop non-matching
+    # process types completely
+    consumers = proc.mul(r_in).dropna(how='all', axis=1).sum(axis=1)
+    producers = proc.mul(r_out).dropna(how='all', axis=1).sum(axis=1)
+
+    # iterate over all point types (consumers, producers, sources) with
+    # different markers: (consumers, 'circle-open'), (producers, 'circle'),
+
+
 def _add_points(prob, bm, comm_zs, source, proc):
     """ Add Source points
     TODO:add process handling
@@ -111,8 +133,8 @@ def _add_points(prob, bm, comm_zs, source, proc):
 
         # r_in = prob.r_in.xs(commodity, level='Commodity')
         # r_out = prob.r_out.xs(commodity, level='Commodity')
-        # multiply input/output ratios with capacities and drop non-matching
-        # process types completely
+        # # multiply input/output ratios with capacities and drop non-matching
+        # # process types completely
         # consumers = proc.mul(r_in).dropna(how='all', axis=1).sum(axis=1)
         # producers = proc.mul(r_out).dropna(how='all', axis=1).sum(axis=1)
 
@@ -256,7 +278,7 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
                          color=COLORS[com],
                          dash=dash)))
 
-            if use_hubs and v1v2 in Hubs.index.values.tolist():
+            if use_hubs and v1v2 in Hubs.index:
                 these_hubs = Hubs.xs(v1v2)
                 for hub, val in these_hubs[these_hubs > 0].iteritems():
                     produced = prob.r_out.xs(hub, level='Process') * val
