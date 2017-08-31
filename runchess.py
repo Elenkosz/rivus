@@ -51,8 +51,8 @@ datenow = datetime.now().strftime('%y%m%dT%H%M')
 result_dir = os.path.join('result', '{}-{}'.format(proj_name, datenow))
 profile_log = Series(name='runchess-profiler')
 
-DX = 250
-DY = 125
+DX = 50
+DY = 25
 
 if SOLVER:
     base_directory = os.path.join('data', proj_name)
@@ -99,7 +99,9 @@ if SOLVER:
     # profile_log['rivus_report'] = timenow() - rivusreport
 else:
     print('Loading pickled modell...')
-    arch_dir = os.path.join('result', 'chessboard_light')
+    # arch_dir = os.path.join('result', 'chessboard_light')
+    # arch_dir = os.path.join('result', 'chessboard-170831T0933')
+    arch_dir = os.path.join('result', 'chessboard-170831T0932')  # With process
     arch_path = os.path.join(arch_dir, 'prob.pgz')
     rivusload = timenow()
     prob = rivus.load(arch_path)
