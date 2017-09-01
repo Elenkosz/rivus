@@ -2,7 +2,7 @@
 Reference
 ##########
 
-You can get an overview what is the purpose of the submodules from the :ref:`previous section <>`.
+You can get an overview of the purpose of the submodules from the :ref:`previous section <a_tutorial>`.
 The (detailed) description of the functions all across rivus.
 
 **************
@@ -26,6 +26,19 @@ rivus.utils
 ***********
 rivus.io
 ***********
+
+plot
+=====
+
+.. py:module:: rivus.io.plot
+
+.. function:: fig3d(prob:ConcreteModel)
+
+  Interactive viszalization.
+
+
+db
+===
 .. todo::
   reference rivus.io
 
@@ -35,9 +48,9 @@ rivus.graph
 .. todo::
   reference rivus.graph
 
-***********
+**************
 rivus.gridder
-***********
+**************
 .. todo::
   reference rivus.gridder
 
@@ -47,8 +60,8 @@ rivus.tests
 .. todo::
   reference rivus.tests
 
-***********
+****************
 rivus.converter
-***********
+****************
 .. todo::
   reference rivus.converter

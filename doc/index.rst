@@ -75,49 +75,49 @@ Symbols:
 
 If got courious go to :ref:`Installation <a_install>`
 
-  ***********************
-  Change-log
-  ***********************
+***********************
+Change-log
+***********************
 
-  .. todo::
-    Set version number to 0.2 after accepting the PRs
+.. todo::
+  Set version number to 0.2 after accepting the PRs
 
-  Version 0.2
-  ============
-  * 2017-10
-  * Major bug-fix (`#13`_)
-  * Restructuring (Issue5_, PR8_)
-  * 3D visualization for results (PR13_)
-  * Abstract street network generator (PR8_, PR28_)
-  * 3D interactive visualization for results (`#17`_)
-  * Graph/Network analysis sub package (`#22`_)
-  * PostgreSQL+PostGIS integration (`#24`_)
-  * Unittests (`#33`_)
-  * Line length calc bugfix
-  * Save function extension (`#16`_)
-  * Excel parsing (`#23`_)
-  * Speed-ups (`#27`_)
-  * Fix Warnings (`#30`_)
+Version 0.2
+============
+* 2017-10
+* Major bug-fix (`#13`_)
+* Restructuring (Issue5_, PR8_)
+* 3D visualization for results (PR13_)
+* Abstract street network generator (PR8_, PR28_)
+* 3D interactive visualization for results (`#17`_)
+* Graph/Network analysis sub package (`#22`_)
+* PostgreSQL+PostGIS integration (`#24`_)
+* Unittests (`#33`_)
+* Line length calc bugfix
+* Save function extension (`#16`_)
+* Excel parsing (`#23`_)
+* Speed-ups (`#27`_)
+* Fix Warnings (`#30`_)
 
-  .. _`#17`: https://github.com/tum-ens/rivus/pull/17
-  .. _`#22`: https://github.com/tum-ens/rivus/pull/22
-  .. _`#24`: https://github.com/tum-ens/rivus/pull/24
-  .. _`#28`: https://github.com/tum-ens/rivus/pull/28
-  .. _`#33`: https://github.com/tum-ens/rivus/pull/33
-  .. _`#13`: https://github.com/tum-ens/rivus/pull/13
-  .. _`#16`: https://github.com/tum-ens/rivus/pull/16
-  .. _`#23`: https://github.com/tum-ens/rivus/pull/23
-  .. _`#27`: https://github.com/tum-ens/rivus/pull/27
-  .. _`#30`: https://github.com/tum-ens/rivus/pull/30
-  .. _Issue5: https://github.com/tum-ens/rivus/issues/5
-  .. _PR8: https://github.com/tum-ens/rivus/pull/8
-  .. _PR13: https://github.com/tum-ens/rivus/pull/17
-  .. _PR28: https://github.com/tum-ens/rivus/pull/28
+.. _`#17`: https://github.com/tum-ens/rivus/pull/17
+.. _`#22`: https://github.com/tum-ens/rivus/pull/22
+.. _`#24`: https://github.com/tum-ens/rivus/pull/24
+.. _`#28`: https://github.com/tum-ens/rivus/pull/28
+.. _`#33`: https://github.com/tum-ens/rivus/pull/33
+.. _`#13`: https://github.com/tum-ens/rivus/pull/13
+.. _`#16`: https://github.com/tum-ens/rivus/pull/16
+.. _`#23`: https://github.com/tum-ens/rivus/pull/23
+.. _`#27`: https://github.com/tum-ens/rivus/pull/27
+.. _`#30`: https://github.com/tum-ens/rivus/pull/30
+.. _Issue5: https://github.com/tum-ens/rivus/issues/5
+.. _PR8: https://github.com/tum-ens/rivus/pull/8
+.. _PR13: https://github.com/tum-ens/rivus/pull/17
+.. _PR28: https://github.com/tum-ens/rivus/pull/28
 
-  Version 0.1
-  ============
-  * 2015-05
-  * Initial release.
+Version 0.1
+============
+* 2015-05
+* Initial release.
 
 
 *************
