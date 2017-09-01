@@ -41,7 +41,6 @@ if GRAPHS:
     # import igraph as pig
     from rivus.graph.to_graph import to_nx
     # from rivus.graph.analysis import minimal_graph_anal
-    from rivus.main.rivus import get_constants
 
 
 # loosly structered run parts
@@ -125,7 +124,7 @@ if PLOTTER:
 if GRAPHS:
     print('Graph handling.')
     graph_prep = timenow()
-    _, pmax, _, _ = get_constants(prob)
+    _, pmax, _, _ = rivus.get_constants(prob)
     graphs = to_nx(prob.params['vertex'], prob.params['edge'], pmax)
     profile_log['graph_prep'] = timenow() - graph_prep
 
