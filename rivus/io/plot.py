@@ -84,26 +84,59 @@ def _linewidth(value, scale=1.0):
     return math.sqrt(value) * 0.05 * scale
 
 
-def _add_process(prob, bm, comm_zs, source, proc, hub):
-    proc_nohub = proc.copy()
-    for hub_name in hub.columns:
-        del proc_nohub[hub_name]
-    proc_nohub = proc_nohub[(proc_nohub.T != 0).any()]
-    proc
+def _process_lines(prob, bm, comms, comm_zs, processes, hubs, vertex,
+                   linescale=1,):
+    lines = []
+    legends = []
 
-    try:
-        sources = source.max(axis=1)
-    except KeyError:
-        sources = Series()
-    r_in = prob.r_in.xs(commodity, level='Commodity')
-    r_out = prob.r_out.xs(commodity, level='Commodity')
-    # multiply input/output ratios with capacities and drop non-matching
-    # process types completely
-    consumers = proc.mul(r_in).dropna(how='all', axis=1).sum(axis=1)
-    producers = proc.mul(r_out).dropna(how='all', axis=1).sum(axis=1)
+    # Drop all 0 rows and then columns
+    proc_only = (processes[processes > 0]
+                 .dropna(how='all')
+                 .dropna(axis=1, how='all'))
+    # Drop hubs and keep only pure processes
+    proc_only = proc_only.reindex(proc_only.index,
+                                  proc_only.columns.difference(hubs.columns))
+    proc_comm = prob.params['process_commodity']
+    for v, serie in proc_only.iterrows():
+        point = vertex.geometry.iat[v]
+        xx, yy = bm(point.x, point.y)
+        for process, val in serie.iteritems():
+            consumed = (proc_comm.loc[process, :, 'In']
+                        .reindex(comms)
+                        .dropna()
+                        .mul(val))
+            con_zs = [comm_zs[com] for com in consumed.index]
+            produced = (proc_comm.loc[process, :, 'Out']
+                        .reindex(comms)
+                        .dropna()
+                        .mul(val))
+            pro_zs = [comm_zs[com] for com in produced.index]
+            num_points = len(consumed) + len(produced)
+            zs = con_zs + pro_zs
+            lines.append({
+                'type': 'scatter3d',
+                'x': [xx] * num_points, 'y': [yy] * num_points,
+                'z': zs,
+                'showlegend': process not in legends,
+                'legendgroup': process,
+                'name': process,
+                # 'opacity': 0.4,
+                "hoverinfo": "text",
+                'text': [process, ] + [''] * (num_points - 1),
+                'mode': 'lines+markers',
+                'line': {
+                    'color': COLORS[consumed.index.values[0]],
+                    'width': _linewidth(produced.max().values[0], linescale),
+                },
+                'marker': {
+                    'size': [0, ] + [18] * (num_points - 1),
+                    'symbol': ['circle'] * num_points,
+                    # 'color': [COLORS[com] for com in consumed.index]
+                }
+            })
+            legends.append(process)
 
-    # iterate over all point types (consumers, producers, sources) with
-    # different markers: (consumers, 'circle-open'), (producers, 'circle'),
+    return lines
 
 
 def _add_points(prob, bm, comm_zs, source, proc):
@@ -163,7 +196,7 @@ def _add_points(prob, bm, comm_zs, source, proc):
                 xx, yy = bm(point.x, point.y)
                 m_x.append(xx)
                 m_y.append(yy)
-                #marker_size = 3 + math.sqrt(com_val) * 1.5
+                # marker_size = 3 + math.sqrt(com_val) * 1.5
                 # m_size.append(marker_size)
                 m_stly.append(marker_style)
                 # look up unit ? TODO
@@ -188,16 +221,16 @@ def _add_points(prob, bm, comm_zs, source, proc):
     return markers
 
 
-def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
-               use_hubs=False, hub_opac=0.2, linescale=1,
-               cap_txt=True, len_txt=True):
+def _add_edges(prob, bm, comms, comm_zs, pmax, hubs, proc, source, dz=5,
+               use_hubs=False, hub_opac=0.2, linescale=1, cap_txt=True,
+               len_txt=True):
     # Inits =======================================
     capacities = []
-    annots = []  # for hub connectors and capacity infos
+    annots = []  # for hub connectors and capacity info
     annot_devider = 8
     comm_offs = {
         # for placing anchors on a line
-        # 0 for middle, 1 for one annot_devider further...
+        # 0 for middle, 1 for one annot_divider further...
         'cap': -3 if use_hubs else 0,  # capacity of the line
         'Cool': -2,
         'Elec': -1,
@@ -212,11 +245,11 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
         'hoverinfo': 'skip'
     }
     cap_groups = {}
-    if Hubs.empty:
+    if hubs.empty:
         use_hubs = False
 
     # Add dummies for legend formatting
-    # Legends symbol will have the line width 
+    # Legends symbol will have the line width
     # of the first element in the legendgroup
     for com in comms:
         capacities.append({
@@ -230,7 +263,7 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
                 'color': COLORS[com]
             }
         })
-        if com not in Pmax.columns.values:
+        if com not in pmax.columns.values:
             continue
         cap_groups[com] = {
             'type': 'scatter3d',
@@ -255,9 +288,9 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
         xs, ys = zip(*linprj)
         anchor_x, anchor_y = sum(xs) / len(xs), sum(ys) / len(ys)
         for com in comms:
-            is_built_comm = com in Pmax.columns.values
+            is_built_comm = com in pmax.columns.values
             if is_built_comm:
-                comm_cap = Pmax.get_value(v1v2, com)
+                comm_cap = pmax.get_value(v1v2, com)
                 if comm_cap > 0:
                     is_built_edge = True
                 else:
@@ -278,8 +311,8 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
                          color=COLORS[com],
                          dash=dash)))
 
-            if use_hubs and v1v2 in Hubs.index:
-                these_hubs = Hubs.xs(v1v2)
+            if use_hubs and v1v2 in hubs.index:
+                these_hubs = hubs.xs(v1v2)
                 for hub, val in these_hubs[these_hubs > 0].iteritems():
                     produced = prob.r_out.xs(hub, level='Process') * val
                     from_com = prob.r_in.xs(
@@ -337,6 +370,11 @@ def _add_edges(prob, bm, comms, comm_zs, Pmax, Hubs, dz=5,
             if len_txt and not cap_txt:
                 pass
 
+    vertex = prob.params['vertex']
+    proc_lines = _process_lines(prob, bm, comms, comm_zs, proc, hubs, vertex,
+                                linescale)
+    annots.extend(proc_lines)
+
     return capacities, annots
 
 
@@ -380,34 +418,27 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
         lat_0=cent_para, lon_0=cent_meri)
 
     # Get result values for plotting
-    _, Pmax, Kappa_hub, Kappa_process = get_constants(prob)
+    _, pmax, kappa_hub, kappa_process = get_constants(prob)
     source = get_timeseries(prob)[0]
 
-    # Use all commodities if none is given
+    # Use all involved commodities if none is given
     if comms is None:
-        comm_order = {  # values set the sort order
-            'Demand': 0,
-            'Gas': 5,
-            'CO2': 10,
-            'Heat': 15,
-            'Elec': 20,
-            'Cool': 25,
-        }
-        # Drop all 0 columns in Pmax
-        for column in Pmax:
-            if all(Pmax[column] == 0):
-                del Pmax[column]
-        comms = Pmax.columns.values
-
-        proc_used = Kappa_process.columns.values
+        comm_order = dict(Demand=0, Gas=5, CO2=10, Heat=15, Elec=20, Cool=25)
+        # Drop all 0 columns in pmax
+        for column in pmax:
+            if all(pmax[column] == 0):
+                del pmax[column]
+        comms = pmax.columns.values
+        # Figure out commodities involved through processes
+        proc_used = kappa_process.columns.values
         if len(proc_used):
             proc_comms = (prob.r_in.loc[proc_used].index
                           .get_level_values(level='Commodity')
                           .union(prob.r_out.loc[proc_used].index
                                  .get_level_values(level='Commodity')))
             comms = union1d(comms, proc_comms.values)
-
-        hubs_used = Kappa_hub.columns.values
+        # Figure out commodities involved through hubs
+        hubs_used = kappa_hub.columns.values
         if len(hubs_used):
             hub_comms = (prob.r_in.loc[hubs_used].index
                          .get_level_values(level='Commodity')
@@ -418,23 +449,24 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
 
     comm_zs = [dz * k for k, c in enumerate(comms)]
     comm_zs = dict(zip(comms, comm_zs))
-    # geoPmax = Pmax.join(prob.params['edge'].geometry, how='inner')
+    # geoPmax = pmax.join(prob.params['edge'].geometry, how='inner')
     if verbose:
         print("plot prep took: {:.4f}".format(time.time() - plotprep))
         layersstart = time.time()
 
     # Adding capacity lines: capacities and hubs
-    edge_kwargs = {
-        'Pmax': Pmax, 'Hubs': Kappa_hub, 'dz': 5,
-        'use_hubs': use_hubs, 'hub_opac': hub_opac, 'linescale': linescale}
+    edge_kwargs = dict(pmax=pmax, hubs=kappa_hub, proc=kappa_process,
+                       source=source, dz=5, use_hubs=use_hubs,
+                       hub_opac=hub_opac, linescale=linescale)
     cap_layers, hub_layer = _add_edges(prob, bm, comms, comm_zs, **edge_kwargs)
     # Adding markers
-    markers = _add_points(prob, bm, comm_zs, source, Kappa_process)
+    markers = _add_points(prob, bm, comm_zs, source, kappa_process)
+
     if verbose:
         print("layers took: {:.4f}".format(time.time() - layersstart))
 
-    layout = {
-        # 'autosize' : False,
+    layout_default = {
+        # 'autosize': False,
         # 'width' : 500,
         # 'height' : 500,
         # paper_bgcolor='#7f7f7f', plot_bgcolor='#c7c7c7'
@@ -446,7 +478,7 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
         'legend': {
             'traceorder': 'reversed',
             # 'y': 2,
-            #'yanchor' : 'center'
+            # 'yanchor' : 'center'
         },
         'scene': {
             'xaxis': {
@@ -463,10 +495,15 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
             # 'aspectratio': {
             #     'x': 1, 'y': 1, 'z': .6
             # }
+            'camera': {
+                'eye': dict(x=2, y=-2, z=2)
+            }
         }
         # 'width' : 700
     }
+    layout = layout_default if layout is None else layout
 
+    # Uniting the elements which make up a plotly figure
     data = cap_layers + hub_layer + markers
     fig = dict(data=data, layout=layout)
     return fig
