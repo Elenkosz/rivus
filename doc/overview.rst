@@ -51,6 +51,18 @@ Utils - ``rivus.utils``
 Universal code snippets, which can get handy generally. From setting up solver parameters to parameter range generator,
 you can find here the
 
+IO - ``rivus.io``
+==================
+
+Plotting - ``rivus.io.plot``
+-----------------------------
+
+.. raw:: html
+
+  <div>
+    <a href="https://plot.ly/~lnksz/46/?share_key=tF3hwedc2XqUAV9IFZNHVM" target="_blank" title="rivus002" style="display: block; text-align: center;"><img src="https://plot.ly/~lnksz/46.png?share_key=tF3hwedc2XqUAV9IFZNHVM" alt="rivus002" style="max-width: 100%;width: 600px;"  width="600" onerror="this.onerror=null;this.src='https://plot.ly/404.png';" /></a>
+    <script data-plotly="lnksz:46" sharekey-plotly="tF3hwedc2XqUAV9IFZNHVM" src="https://plot.ly/embed.js" async></script>
+  </div>
 
 ************
 Limitations
