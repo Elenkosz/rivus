@@ -16,7 +16,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
-    'sphinx.ext.todo'
+    'sphinx.ext.todo',
+    'sphinx.ext.linkcode'
 ]
 
 #templates_path = ['_templates']
@@ -36,11 +37,31 @@ exclude_patterns = ['_build']
 
 htmlhelp_basename = 'rivusdoc'
 if not on_rtd:
-    import sphinx_rtd_theme
-    html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+    try:
+        import sphinx_rtd_theme
+        html_theme = 'sphinx_rtd_theme'
+        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+    except Exception as e:
+        html_theme = 'default'
 
+# Include todos from ext.todo
 todo_include_todos = True
+
+# Calculate repo link to source code
+tum = r'https://github.com/tum-ens/rivus'
+lnksz = r'https://github.com/lnksz/rivus/tree/havasi-playground'
+link_base = lnksz
+
+
+def linkcode_resolve(domain, info):
+    if domain != 'py':
+        return None
+    if not info['module']:
+        return None
+    filename = info['module'].replace('.', '/')
+    return link_base + "/%s.py" % filename
+
+
 # LaTeX output
 
 latex_elements = {
