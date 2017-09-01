@@ -27,7 +27,6 @@ You can see a unified figure of the typical result plots bellow created by
 Merge was done only for better spacing in the documentation.
 
 .. figure:: img/rivus-caps.png
-    :scale: 100%
 
 Unified rivus capacity output of a smaller city.
 

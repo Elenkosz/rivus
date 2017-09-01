@@ -47,6 +47,15 @@ if not on_rtd:
 # Include todos from ext.todo
 todo_include_todos = True
 
+# Add these to the end of all files: make it available from everywhere
+rst_epilog = r"""
+.. |m2| replace:: m\ :sup:`2`\
+
+.. |br| raw:: html
+
+   <br />
+"""
+
 # Calculate repo link to source code
 tum = r'https://github.com/tum-ens/rivus'
 lnksz = r'https://github.com/lnksz/rivus/tree/havasi-playground'
