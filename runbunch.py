@@ -1,5 +1,6 @@
 # GENERAL
 import os
+import traceback as tb
 from copy import deepcopy
 from time import time as timenow
 from datetime import datetime
@@ -69,7 +70,7 @@ def _source_variations(vertex, dim_x, dim_y):
     else:
         source_setups = []
 
-    if True:
+    if False:
         flip = src_inds.copy()
         flip.reverse()
         src_pairs_opposite = zip(src_inds, flip)
@@ -77,8 +78,14 @@ def _source_variations(vertex, dim_x, dim_y):
             this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
             if this_srcs not in source_setups:
                 source_setups.append(this_srcs)
+    else:
+        src_cent = get_source_candidates(vertex, dim_x, dim_y, logic='center')
+        for G, E in src_cent:
+            this_srcs = [('Elec', E, MAX_ELEC), ('Gas', G, MAX_GAS)]
+            if this_srcs not in source_setups:
+                source_setups.append(this_srcs)
 
-    if False:
+    if True:
         src_corners = get_source_candidates(
             vertex, dim_x, dim_y, logic='extrema')
         for E, G in src_corners:
@@ -128,10 +135,10 @@ def run_bunch(use_email=False):
     data = read_excel(data_spreadsheet)
     original_data = deepcopy(data)
     interesting_parameters = [
-        {'df_name': 'commodity',
-         'args': {'index': 'Heat',
-                  'column': 'cost-inv-fix',
-                  'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}},
+        # {'df_name': 'commodity',
+        #  'args': {'index': 'Heat',
+        #           'column': 'cost-inv-fix',
+        #           'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}},
         {'df_name': 'commodity',
          'args': {'index': 'Heat',
                   'column': 'cost-fix',
@@ -161,8 +168,8 @@ def run_bunch(use_email=False):
                               'dx:{1}, dy:{2}, #e:{3}, src:-, par:{4}\n'
                               .format('=' * 10, len_x, len_y, num_edge_x, para_name))
                         counter = 1
-                        for variant in parameter_range(data[param['df_name']],
-                                                       **param['args']):
+                        for variant in parameter_range(
+                                data[param['df_name']], **param['args']):
                             changed = (variant.loc[param['args']['index']]
                                        [param['args']['column']])
                             print('variant <{0}>:{1}'.format(counter, changed))
@@ -199,19 +206,25 @@ def run_bunch(use_email=False):
                                 else:
                                     outcome = 'optimum'
                             profile_log['solve'] = (timenow() - _p_solve)
+
                             # Plot
                             _p_plot = timenow()
                             plotcomms = ['Gas', 'Heat', 'Elec']
                             try:
-                                fig = fig3d(prob, plotcomms, linescale=8,
-                                            use_hubs=True)
+                                fig = fig3d(
+                                    prob, plotcomms, linescale=8,
+                                    dz=(0.25 * len_x), use_hubs=True)
                             except Exception as plot_error:
-                                print(plot_error)
+                                err_tb = tb.format_exception(
+                                    None, plot_error, plot_error.__traceback__)
+                                tb.print_exception(
+                                    None, plot_error, plot_error.__traceback__)
                                 if use_email:
                                     sub = run_summary + '[rivus][plot-error]'
-                                    email_me(plot_error, subject=sub,
+                                    email_me(err_tb, subject=sub,
                                              **email_setup)
                             profile_log['3d_plot_prep'] = (timenow() - _p_plot)
+
                             # Graph
                             _p_graph = timenow()
                             try:
@@ -226,6 +239,7 @@ def run_bunch(use_email=False):
                                              **email_setup)
                             profile_log['all_graph_related'] = (
                                 timenow() - _p_graph)
+
                             # Store
                             this_run = {
                                 'comment': config['run_comment'],
@@ -249,15 +263,15 @@ def run_bunch(use_email=False):
                             print('\tRun ended with: <{}>\n'.format(outcome))
 
                         data = original_data
-                if use_email:
-                    status_txt = ('Finished iteration with edge number {}\n'
-                                  'did: [source-var, param-seek]\n'
-                                  'from [street-length, dim-shift, source-var,'
-                                  ' param-seek]'
-                                  'dx:{}, dy:{}'
-                                  .format(num_edge_x, len_x, len_y))
-                    sub = run_summary + '[rivus][finish-a-src]'
-                    email_me(status_txt, subject=sub, **email_setup)
+                # if use_email:
+                #     status_txt = ('Finished iteration with edge number {}\n'
+                #                   'did: [source-var, param-seek]\n'
+                #                   'from [street-length, dim-shift, source-var,'
+                #                   ' param-seek]'
+                #                   'dx:{}, dy:{}'
+                #                   .format(num_edge_x, len_x, len_y))
+                #     sub = run_summary + '[rivus][finish-a-src]'
+                #     email_me(status_txt, subject=sub, **email_setup)
         if use_email:
             status_txt = ('Finished iteration with street lengths {}-{}\n'
                           'did: [dim-shift, source-var, param-seek]\n'
