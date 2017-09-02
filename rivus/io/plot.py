@@ -101,15 +101,15 @@ def _process_lines(prob, bm, comms, comm_zs, processes, hubs, vertex,
         point = vertex.geometry.iat[v]
         xx, yy = bm(point.x, point.y)
         for process, val in serie.iteritems():
-            consumed = (proc_comm.loc[process, :, 'In']
-                        .reindex(comms)
-                        .dropna()
-                        .mul(val))
+            # Calculate (commodity:used-amount) frame
+            # involved with this process and included in the plot (comms)
+            consumed = (proc_comm.xs(
+                (process, 'In'), level=['Process', 'Direction'])
+                .reindex(comms).dropna().mul(val))
             con_zs = [comm_zs[com] for com in consumed.index]
-            produced = (proc_comm.loc[process, :, 'Out']
-                        .reindex(comms)
-                        .dropna()
-                        .mul(val))
+            produced = (proc_comm.xs(
+                (process, 'Out'), level=['Process', 'Direction'])
+                .reindex(comms).dropna().mul(val))
             pro_zs = [comm_zs[com] for com in produced.index]
             num_points = len(consumed) + len(produced)
             zs = con_zs + pro_zs
