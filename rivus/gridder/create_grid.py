@@ -75,7 +75,8 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
             vertices : [geometry, Vertex]
             edges : [geometry, Edge, Vertex1, Vertex2]
 
-        Indexing:
+        Note:
+            Sequence of indices:
             (6)══04══(7)══05══(8)
              ║        ║        ║
              7        9        11
