@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+pdir = os.path.dirname
 import sys
 # Environment variable to know if the docs are being built on rtd.
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -10,15 +11,33 @@ print
 print("Current working directory: {}".format(os.path.abspath(os.curdir)))
 print("Python: {}".format(sys.executable))
 
+rivus_path = os.path.abspath(pdir(pdir(__file__)))
+print("Adding lib to path:\n{}".format(rivus_path))
+sys.path.insert(0, rivus_path)
+
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.todo',
-    'sphinx.ext.linkcode'
+    # 'sphinx.ext.linkcode'
 ]
+
+# Napoleon settings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
+napoleon_include_special_with_doc = True
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+napoleon_use_ivar = False
+napoleon_use_param = True
+napoleon_use_rtype = True
 
 #templates_path = ['_templates']
 source_suffix = '.rst'
@@ -64,19 +83,19 @@ rst_epilog = r"""
     <hr />
 """
 
-# Calculate repo link to source code
-tum = r'https://github.com/tum-ens/rivus'
-lnksz = r'https://github.com/lnksz/rivus/tree/havasi-playground'
-link_base = lnksz
+# # Calculate repo link to source code
+# tum = r'https://github.com/tum-ens/rivus'
+# lnksz = r'https://github.com/lnksz/rivus/tree/havasi-playground'
+# link_base = lnksz
 
 
-def linkcode_resolve(domain, info):
-    if domain != 'py':
-        return None
-    if not info['module']:
-        return None
-    filename = info['module'].replace('.', '/')
-    return link_base + "/%s.py" % filename
+# def linkcode_resolve(domain, info):
+#     if domain != 'py':
+#         return None
+#     if not info['module']:
+#         return None
+#     filename = info['module'].replace('.', '/')
+#     return link_base + "/%s.py" % filename
 
 
 # LaTeX output

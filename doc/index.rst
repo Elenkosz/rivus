@@ -1,7 +1,3 @@
-:tocdepth: 2
-
-.. module:: rivus
-
 ####################################################################################
 rivus: A mixed integer linear optimisation model for energy infrastructure networks
 ####################################################################################
