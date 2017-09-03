@@ -14,8 +14,19 @@ This section will:
 Data- and Work-Flows
 ***********************
 
-Inputs
-======
+Work-flows differ from each other mainly at the beginning. From where one gets
+the input data.
+
+Further differencies can arise, if one is interested in running a multitude of 
+optimization problems. Whatever the reason is (sensitivity analysis, structural 
+analysis etc.) the same needs arise. The file based output will not be sufficent
+to manage and analyse the output effectively. And there is a good chance, that one
+will move to a remote server to relieve the own computer.
+
+The following section deals with the cases of different data sources.
+
+Input Sources
+==============
 
 Most generally speaking, for working with ``rivus`` you will need the following inputs:
 
@@ -24,6 +35,7 @@ Most generally speaking, for working with ``rivus`` you will need the following 
   - See `Example <https://github.com/tum-ens/rivus/blob/master/data/mnl/data.xlsx>`_
   - Here you can input details about costs, capacities, available commodities etc.
   - Detailed description :ref:`here <a_spreadsheet>`
+
 + Spatial data
 
   - We have been using shapefiles but you can use any format which geopandas_ can read.
@@ -41,6 +53,7 @@ Most generally speaking, for working with ``rivus`` you will need the following 
 
 .. _geopandas: http://geopandas.org/io.html
 
+.. _a_workflows:
 .. figure:: img/workflows.png
   :scale: 65 %
   :align: center
@@ -60,37 +73,38 @@ and conduct analysis on them.
 
   - Rather applicable for smaller research areas.
   - Mind the snapping settings for vertices and edges!
-  - Example `mnl <https://github.com/tum-ens/rivus/tree/master/data/mnl>`_ illustrates the possibility.
+  - Example `mnl <https://github.com/tum-ens/rivus/tree/master/data/mnl>`_ 
+    illustrates this method.
 
-3. Use abstract networks from the integrated ``rivus.gridder`` sub-module.
+3. Use abstract networks from the integrated ``rivus.gridder`` sub-package.
 
   - It is integrated, so you do not need to care about data preparation. Thus ideal
     for getting familiar with ``rivus``.
   - If using the default, it produces a highly symmetric, homogeneous spatial input.
-  - See reference for usage.
+  - See :ref:`reference <_a_gridder>` for usage.
 
 .. _haag15: https://github.com/tum-ens/rivus/tree/master/data/haag15
 .. _MapZen: https://mapzen.com/data/metro-extracts/
 .. _QGIS: http://www.qgis.org/en/site/
 
-Minimalistic Example
-======================
+
+Input from OSM or QGIS
+========================
 
 If you choose to go with the first or second work-flow, the scripts 
 ``building_to_edge.py`` and ``streets_to_edge.py`` in the ``rivus.converter`` sub package
-can help you. (Even if ``skeletrontools`` may not work for at your environment.)
+can help you with the data preparation. (Even if ``skeletrontools`` may not work at your environment.)
 
-See helpful gists, for deeper dive.
+See helpful notebook, for deeper dive.
 
 -  `join data from building.shp and edge.shp`_
 -  `OSM street data to vertex.shp and edge.shp`_
--  `Square grid to vertex.shp and edge.shp`_
 
-.. _join data from building.shp and edge.shp: https://gist.github.com/lnksz/6edcd0a877997e9365e808146e9b51fe
-.. _OSM street data to vertex.shp and edge.shp: https://gist.github.com/lnksz/7977c4cff9c529ca137b67b6774c60d7
-.. _Square grid to vertex.shp and edge.shp: https://gist.github.com/lnksz/bd8ce0a79e499479b61ea7b45d5c661d
+.. _join data from building.shp and edge.shp: https://nbviewer.jupyter.org/gist/lnksz/6edcd0a877997e9365e808146e9b51fe
+.. _OSM street data to vertex.shp and edge.shp: https://nbviewer.jupyter.org/gist/lnksz/7977c4cff9c529ca137b67b6774c60d7
 
-Best explained is the second work-flow by the example run-script ``runmin.py``.
+
+The example run-script ``runmin.py`` illustrates the first two work-flows.
 
 Here is a summary, where the main part is done in *10 lines of code*:
 
@@ -117,23 +131,75 @@ Here is a summary, where the main part is done in *10 lines of code*:
   solver = setup_solver(SolverFactory('glpk'))
   solver.solve(prob, tee=True)
 
-After the last line you have a multitude of opportunities, what you can do with the results.
-(A backup of your input parameters is stored in the ``prob.params`` dictionary.)
+Input from gridder
+====================
 
-1. Retrieve results |br|
+-  The notebook `Square grid`_ leads you through the input creation in depth.
+.. _Square grid: https://nbviewer.jupyter.org/gist/lnksz/bd8ce0a79e499479b61ea7b45d5c661d
+
+Summary of the usage of gridder:
+
+.. code-block:: python
+  :linenos:
+  :emphasize-lines: 13-19
+
+  from rivus.main.rivus import read_excel
+  from rivus.main.rivus import create_model
+  from rivus.gridder.create_grid import create_square_grid
+  from rivus.gridder.extend_grid import extend_edge_data
+  from rivus.gridder.extend_grid import vert_init_commodities
+  from rivus.utils.prerun
+  import pyomo.environ
+  import pyomo.opt.base import SolverFactory
+  ...
+  # Non-spatial
+  data = read_excel(spreadsheet_path)
+  # Spatial
+  latlon = [48.13512, 11.58198]
+  vertex, edge = create_square_grid(origo_latlon=latlon, num_edge_x=4)
+  sources = [('Elec', 0, 100000), ('Gas', 0, 50000)]  # Commodity, VertexID, MaxCapacity
+  vert_init_commodities(vertex, ('Elec', 'Gas'), sources)
+  building_types = ['residential', 'industrial']
+  inits = [1000, 2000]
+  extend_edge_data(edge, sorts=building_types, inits=inits)
+  # Model Creation and Solution
+  prob = create_model(data, vertex, edge)
+  solver = setup_solver(SolverFactory('glpk'))
+  solver.solve(prob, tee=True)
+
+As you can see, the difference is mainly in the *spatial* section. The functions in gridder expose
+a variaty of arguments to offer customization but the defaults can also be used for 
+getting used to rivus. (E.g. above, latlon is not really needed)
+
+Possibilities after solution
+=============================
+
+After the last lines of the previous code examples, you have a multitude of opportunities, what you can do with the ``prob`` ConcreteModel class.
+(Even a backup of your input parameters is stored in the ``prob.params`` dictionary!)
+
+Retrieve results
   ``rivus.main.rivus`` showcase ``get_constants`` and ``get_timeseries`` for that. |br|
   Or you can create a report in a format of an Excel spreadsheet with ``report``.
-2. Save the result into an archive. |br|
-   (From which you can reload an re-run it.) 
-3. Create 2D static or 3D interactive plots. |br|
-  ``rivus.main.plot`` or ``rivus.main.result_figures`` expose ``matplotlib`` with all its power (and weaknesses.) |br|
-  ``rivus.io.fi3d`` and ``plotly`` will give you the tool for interactive visual data exploration.
-4. Conduct graph theoretical analysis on the optimal result networks. |br|
-  ``rivus.graph`` holds the adapters so that you  can leverage the opportunities offered by
-  mainstream packages like NetworkX_ and python-igraph_.
-5. Store your results into a PostgreSQL+PostGIS database. |br|
-  ``rivus.io.db`` is all about that.
-  As it can be a rather 'scary' thing to jump into database world, a `separate documentation <http://rivus-db.readthedocs.io/en/latest/>`_ was dedicated to help you get started.
+
+Save the result
+  as a serialized archive. (From which you can reload an re-run it.) 
+
+Create plots
+  ``rivus.main.plot`` or ``rivus.main.result_figures`` expose ``matplotlib`` with all its power (and particular API...) |br|
+  ``rivus.io.fi3d`` and ``plotly`` will give you the tool for 3D, interactive visual data exploration. Also inside of a jupyter notebook, or exported as online, shareable website.
+
+Conduct graph theoretical analysis
+  ``rivus.graph`` holds the adapters so that you  can leverage the opportunities offered by mainstream packages like NetworkX_ and python-igraph_.
+
+Store to PostgreSQL+PostGIS database.
+  ``rivus.io.db`` is all about that. |br|
+  As it can be a rather 'scary' thing to jump into the world databases, a `separate documentation <http://rivus-db.readthedocs.io/en/latest/>`_ was dedicated to help you get started and let the fears become a thing of the past.
+
+Notify yourself
+  Send an e-mail notification about it if this happened on a remote server.
+
+You can find detailed description and code samples 
+in the :ref:`reference <a_subpacks>`
 
 .. _NetworkX: https://networkx.github.io/
 .. _python-igraph: http://igraph.org/python/
@@ -143,46 +209,105 @@ After the last line you have a multitude of opportunities, what you can do with 
 Structuring
 *************
 
-``rivus`` after version 0.1 became self-contained. Its restructuring is still not
-complete, but the sub packages aim to bundle the similar functions together.
-Goals to achieve with it:
+.. _a_rivus_pack:
+.. figure:: img/rivus-modules2.png
+  :scale: 55 %
+  :align: center
+
+  Schematic internal structure. |br|
+  Dashed arrow: will be re-routed in future versions. |br|
+  Colours are used consequently with :ref:`previous figure <a_workflows>`. 
+
+
+As of version 0.2 ``rivus`` became self-contain. Its restructuring is still not
+complete, but the sub-packages aim to bundle the similar functions together.
+Reasons to do so:
 
 * Plug-in opportunity for new functionality.
-* Smaller, and thus easier maintainable files.
+* Smaller, and thus easier maintainable files. (striven for...)
 * Easier code re-usability.
 * "Structural documentation"
 
-Main - ``rivus.main``
-=======================
+It can be considered as a negative side-effect that import path have grown longer.
 
-Core binding to the Pyomo model. The most 'mathematically programmed' part of the code base.
+For in-depth description see the reference of each sub-package. |br|
+Here you can find a short description of each, to lead you in the good direction, 
+if you are after something.
 
-Mathematical documentation
----------------------------
+Main
+  Core binding to the Pyomo model. You can create a whole model with just one 
+  function call. Get the resulting constants or time-series from the model. |br|
+  
+  It is also, the most *mathematically programmed* part of the code base, 
+  you will better have the mathematical reference with you if you want to dig into the mathematical model itself.
 
-.. todo::
-  Extract description from ojdo's thesis
+  As for version 0.1, this file was **the rivus** script and that is why it still holds some functions, which later will be moved to the ``io`` sub-package, mixed with functions which describe mathematical rules for the Pyomo model and are not meant to be used outside of the sub-package.
 
-Utils - ``rivus.utils``
-=========================
+Utils
+  Historically, the previous *python-tools* functions where migrated into this sub-package. (At the time when rivus was created these were all handy functions collected/created by ojdo, now the majority is obsolete.) These will be sorted out soon, and the purpose will shift towards a container of universal code snippets. 
 
-Universal code snippets, which can get handy generally. From setting up solver parameters to parameter range generator,
-you can find here the
+  Now deployed:
 
-IO - ``rivus.io``
-==================
+  + wrapper for solver set-up
+  + automated parameter range generator
+  + e-mail notification function
+  + some geometrical helpers (pandashp)
 
-Plotting - ``rivus.io.plot``
------------------------------
+  But all smaller, repetitive task should find their way into this sub-package.
+  (Create directories, get pairs of elements in a list, etc.)
 
+Gridder
+  Create and manipulate abstract versions of street and demand structures. |br|
+  Currently, you can create square-grids, with parametrizable features.
+
+IO
+  Prepare input for the :func:`plotly.offline.plot` function, with which you can generate interactive 3D plots. With a free Plotly account, you can store, embed, edit and share online your plots. But it only an option. Although, this sub-package may seem as a shiny extra, through the highly flexible API of Plotly an  intuitive-interactive data exploration tool was integrated into rivus. It triggered the finding of several major bugs in the original code-base.
+
+  2D plotting will be moved here from ``rivus.main``.
+
+  Besides plotting, the adapter to a PostgreSQL+PostGIS database can be found here.
+  This module covers the most of the SQL-world and offers a convenient way to interact with a set up data. A `separate documentation <http://rivus-db.readthedocs.io/en/latest/>`_ was dedicated to help users started, and document the now awaited data structure.
+
+Graph
+  Convert the resulting tabular data, which represent the built commodity carrier grids (electicity grid, Gas pipelines, district heating/cooling grid etc.) into a graph (network) format of either NetworX_ or python-igraph_. Moreover, the file export functions of these libraries were bridged into a module in this sub-package. (Preferred file format is ``.gml`` which is supported by all common graph analysis tools. E.g. Gephi_ the Open-source de-facto tool for advanced graph visualisation and analysis.)
+
+  After the data is in their expected format, both NetworX_ and python-igraph_ offer very advanced opportunities to analyse graphs. You can look up what you need in their documentation. Nevertheless, some basic analyse wrapper is provided to get the result for the most common questions about graph connectivity.
+
+Converter
+  The only sub-package, which were not intended to be used by import, but as a container for separate scripts which facilitate data preparation from real-world street network data sources.
+
+Tests
+  Yes, the unit tests are located here. (What a surprise...)
+  One of the youngest members of the rivus sub-packages. It should not be necessary  to emphasize the importance of testing, but still again and again the joy of implementation takes away the focus from actually test the written code.
+
+  As most of the bugs encountered during my work with ``rivus`` could have been avoided with simple unit tests, I tried to set an example and write tests in parallel to each new function. Anyway, there is a long way to go, but it is worth the energy.
+
+.. _Gephi: https://gephi.org/
+.. _NetworkX: https://networkx.github.io/
+.. _python-igraph: http://igraph.org/python/
 
 ************
 Limitations
 ************
 
-The works done with ``rivus`` were restricted to the the urban level.
-Theoretically, there is no barrier for the model to reach for bigger structures. however,
-pragmatically a performance boost would push the project to be more fun to work with bigger or more detailed problems.
+Two citations to keep in mind, when working with mathematical programming:
 
-As for the current state, ``rivus`` does not consider already existing energy infrastructure networks.
-Thus the solution always assumes a "from scratch" planning. (Feature is planned to be developed.)
+  The purpose of mathematical programming is insight, not numbers.
+
+  -- Arthur M. Geoffrion (in 1976)
+
+  Essentially, all models are wrong, but some are useful.
+
+  -- George E. P. Box (1919–2013)
+
+.. warning::
+  As for the current state, ``rivus`` does not consider already existing energy infrastructure networks.
+  Thus the solution always assumes a **from scratch** planning. (Feature is planned to be integrated into the logic later.)
+
+.. warning::
+  As for now, ``rivus`` does **not handle storage** in any way. 
+
+.. note::
+  The works done with ``rivus`` were restricted to the the **urban level**.
+  Theoretically, there is no barrier for the model to reach for bigger structures, but
+  pragmatically a performance boost would be needed to push the project in the direction of applicability to bigger or more detailed problems.

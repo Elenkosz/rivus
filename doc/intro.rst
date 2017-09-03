@@ -50,6 +50,9 @@ Symbols:
 Installation
 *************
 
+Core Setup
+=============
+
 With Miniconda_. (A minimal distribution of the Anaconda_ package manager.)
 If you already have Anaconda_ already installed, you are also good to go.
 
@@ -72,6 +75,9 @@ The ``&&`` and ``-y`` chain the commands and suppress installation confirmation,
   conda install -y -c conda-forge pyshp shapely basemap &&
   conda install -y -c conda-forge pyproj fiona geopy geopandas
 
+Enhancement Setup
+==================
+
 For optional extensions (See next section for more info.)
 ::
   conda install -y -c conda-forge plotly
@@ -85,14 +91,29 @@ Leverage the possibilities of conda environments in your jupyter notebook.
 
 If you decide to use ``rivus.io.db``, ``rivus.utils.notify`` and do not want to share
 your credentials with the world (highlighted), or you simply want to store some run parameters outside
-of version controlling. (So "checkbox" changes do not disturbe the actual code part.)
+of version controlling. (So "check-box" changes do not disturb the actual code part.)
 A config file is useful (and sometimes awaited as ``config.json`` in the root of the rivus repository.)
+If you use it, please add ``/config.json`` to your ``rivus/.git/info/exclue`` file.
 
 Download a :download:`template <download/config.json>` for getting you started.
 
 .. literalinclude:: /download/config.json
   :linenos:
   :emphasize-lines: 4,9-11
+
+In the e.g. run-script or test you can access these informations with only a few lines of code:
+
+.. code-block:: python
+
+  import json
+  config = []
+  with open('./config.json') as conf:
+      config = json.load(conf)
+  ...
+  password = config['db']['pass']
+
+
+|hr|
 
 Should ever occur that NetworkX_ is too slow for a graph analysis. python-igraph_ can be a faster alternative.
 But mind the possible overhead at installation. (Esp. on Windows)

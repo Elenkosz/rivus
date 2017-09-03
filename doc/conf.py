@@ -44,6 +44,10 @@ if not on_rtd:
     except Exception as e:
         html_theme = 'default'
 
+html_theme_options = {
+    'navigation_depth': 4,
+}
+
 # Include todos from ext.todo
 todo_include_todos = True
 
@@ -54,6 +58,10 @@ rst_epilog = r"""
 .. |br| raw:: html
 
    <br />
+
+.. |hr| raw:: html
+
+    <hr />
 """
 
 # Calculate repo link to source code

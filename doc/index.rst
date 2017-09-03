@@ -1,7 +1,4 @@
-.. urbs documentation master file, created by
-   sphinx-quickstart on Wed Sep 10 11:43:04 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+:tocdepth: 2
 
 .. module:: rivus
 
@@ -21,11 +18,12 @@ rivus: A mixed integer linear optimisation model for energy infrastructure netwo
 .. __: http://creativecommons.org/licenses/by/4.0/
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    intro
    overview
    reference
+   math_reference
    contribution
 
 ***********************
@@ -85,7 +83,8 @@ Change-log
 Version 0.2
 ============
 * 2017-10
-* Major bug-fix (`#13`_)
+* Major bug-fix regarding line length calculation(`#13`_)
+* Major bug-fic regarding usage of hubs in vertices (`#37`_)
 * Restructuring (Issue5_, PR8_)
 * 3D visualization for results (PR13_)
 * Abstract street network generator (PR8_, PR28_)
@@ -109,6 +108,7 @@ Version 0.2
 .. _`#23`: https://github.com/tum-ens/rivus/pull/23
 .. _`#27`: https://github.com/tum-ens/rivus/pull/27
 .. _`#30`: https://github.com/tum-ens/rivus/pull/30
+.. _`#37`: https://github.com/tum-ens/rivus/pull/37
 .. _Issue5: https://github.com/tum-ens/rivus/issues/5
 .. _PR8: https://github.com/tum-ens/rivus/pull/8
 .. _PR13: https://github.com/tum-ens/rivus/pull/17
@@ -128,10 +128,23 @@ Dependencies
 * Pyomo_ for model equations and as the interface to optimisation solvers
   (CPLEX, GLPK, Gurobi, ...). Version 4 recommended, as version 3 support
   (a.k.a. as coopr.pyomo) will be dropped soon.
+
+  + ConcreteModel is the basis to formulate our optimisation problem.
+
 * matplotlib_ for plotting
-* Pandas_ for input and result data handling, report generation
 * Plotly_ for interactive 3D plots [extension]
+  
+  + We use the offline variants of this package.
+  + Also compatible with the jupyter notebook.
+
+* Pandas_ for input and result data handling, report generation
+  
+  + Pandas' DataFrame is used *very extensively* throughout rivus.
+
 * SQLAlchemy_ and psycopg2_ for database integration [extension]
+
+  + Pandas's DataFrame works together with SQLAlchemy.
+
 * NetworkX_ for network analysis [extension]
 
 .. _Python: https://www.python.org/
