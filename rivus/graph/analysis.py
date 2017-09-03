@@ -6,7 +6,7 @@ import warnings
 
 
 def minimal_graph_anal(graphs, calc_spanning=True, graph_package='NX'):
-    """Summary
+    """Showcase interoperable connectivity analysis.
 
     Parameters
     ----------
@@ -21,8 +21,11 @@ def minimal_graph_anal(graphs, calc_spanning=True, graph_package='NX'):
 
     Returns
     -------
-    TYPE
-        Description
+    list of dict
+        + commodity
+        + is_connected
+        + connected_components (number of them)
+        + is_minimal (if ``calc_spanning`` is True)
     """
     if len(graphs) < 1:
         warnings.info("Empty graph list was input to analyzer!")

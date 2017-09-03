@@ -58,11 +58,13 @@ If you already have Anaconda_ already installed, you are also good to go.
 
 Create a clean environment with the used packages from the SciPy stack:
 ::
+
   conda create --name rivus python=3.6 numpy pandas xlrd openpyxl jupyter
 
 `Activate <https://conda.io/docs/user-guide/tasks/manage-environments.html#activating-an-environment>`_
 your new and shiny environment as written on the console after the installation.
 ::
+
   activate rivus # for windows
   source activate rivus # linux
 
@@ -71,6 +73,7 @@ We use the with ``- c conda-forge`` the `conda-forge`_ channel, because it makes
 The ``&&`` and ``-y`` chain the commands and suppress installation confirmation, respectively.
 (So that you can go grab a coffee during the installation process.):
 ::
+
   conda install -y -c conda-forge pyomo glpk &&
   conda install -y -c conda-forge pyshp shapely basemap &&
   conda install -y -c conda-forge pyproj fiona geopy geopandas
@@ -80,6 +83,7 @@ Enhancement Setup
 
 For optional extensions (See next section for more info.)
 ::
+
   conda install -y -c conda-forge plotly
   conda install -y -c conda-forge networkx
   conda install -y -c conda-forge psycopg2 sqlalchemy
@@ -87,6 +91,7 @@ For optional extensions (See next section for more info.)
 Leverage the possibilities of conda environments in your jupyter notebook.
 (Which is optional but  really worth using it):
 ::
+
   conda install -y nbconda
 
 If you decide to use ``rivus.io.db``, ``rivus.utils.notify`` and do not want to share
@@ -119,6 +124,7 @@ Should ever occur that NetworkX_ is too slow for a graph analysis. python-igraph
 But mind the possible overhead at installation. (Esp. on Windows)
 As for ``2017-08`` following installation possibilities are available:
 ::
+
   conda install -c conda-forge python-igraph  # lin-___-osx | py2.7, py3.4<
   conda install -c vtraag python-igraph       # ___-win-___ | py2.7, py3.5
   conda install -c marufr python-igraph       # lin-win-osx | py2.7, _____

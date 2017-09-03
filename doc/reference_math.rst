@@ -1,5 +1,5 @@
 ########################
-Mathematical Reference
+Reference - Mathematical 
 ########################
 
 .. todo::

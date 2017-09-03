@@ -7,6 +7,7 @@ from numpy import arange
 def parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
                     step=None, zero_root=None):
     """Yield values of the parameter in a given range
+
     Parameters
     ----------
     data_df : DataFrame
@@ -29,8 +30,8 @@ def parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
         proportions will fail.
         Use this value to set the root for the parameter range.
 
-    Returns
-    -------
+    Yields
+    ------
     DataFrame
         A modified version of xls[df_name]
     """

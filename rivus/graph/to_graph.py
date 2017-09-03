@@ -1,20 +1,4 @@
 """Functions to convert tabular data to popular python graph structures
-networkx:
-    +/- Pure python implementation.
-    + Widely used and tested.
-    + Docs are quite good.
-    + Easy (platform independent) installation
-    - Slower than igraph (and graph-tools)
-igraph:
-    + C based with python wrappers.
-    + Mature library package.
-    + Included for speed and so for scalability.
-    x Docs are OK.
-    - Windows install can be somewhat tedious (with unofficial wheel files).
-      But it works.
-graph-tools: (maybe added in the future)
-    + Self proclaimed: fastest in graph analyses
-    - Not really windows user friendly (docker install should be tested)
 """
 import os
 
@@ -24,29 +8,40 @@ def to_igraph(vdf, edf, pmax, comms=None, peak=None, save_dir=None, ext='gml'):
     Each commodity gets its own graph
     Weights are derived from built capacity.
 
-    Args:
-        vdf ([Geo]DataFrame): Holding Vertex Data id=Vertex
-            and Commodity Sources as columns
-        edf ([Geo]DataFrame): Holding (V1,V2) Multi-indexed Edge data
-            To be sure, that all edges are created.
-        pmax (DataFrame): Commodities as columns with max capacity per edge
-            returned by rivus.get_constants()
-        comms (iterable, optional): Names of the commodities from which we
-            build the graphs. (Each as separate graph.) If omitted, the columns
-            of pmax will be used.
-        peak (DataFrame, optional): Commodities as columns with demands
-            in t_peak time-step. Calculated in main.rivus
-        save_dir (path string, optional): Path to a dir to save graphs as `ext`
-            Path preferably constructed using the os.path module.
-            If dir does not exit yet, it will be created.
-        ext (string) file extension, supported by igraph.save()
-            If not one of the following, the default 'gml' will be applied.
-            'adjacency', 'dimacs', 'dot', 'graphviz', 'edgelist', 'edges',
-            'edge', 'gml', 'graphml', 'graphmlz', 'gw', 'leda', 'lgl', 'lgr',
-            'ncol', 'net', 'pajek', 'pickle', 'picklez', 'svg'
+    Parameters
+    ----------
+    vdf : [Geo]DataFrame
+        Holding Vertex Data id=Vertex
+        and Commodity Sources as columns
+    edf : [Geo]DataFrame
+        Holding (V1,V2) Multi-indexed Edge data
+        To be sure, that all edges are created.
+    pmax : DataFrame
+        Commodities as columns with max capacity per edge
+        returned by rivus.get_constants()
+    comms : iterable, optional
+        Names of the commodities from which we
+        build the graphs. (Each as separate graph.) If omitted, the columns
+        of pmax will be used.
+    peak : DataFrame, optional
+        Commodities as columns with demands
+        in t_peak time-step. Calculated in main.rivus
+    save_dir : path string, optional
+        Path to a dir to save graphs as `ext`
+        Path preferably constructed using the os.path module.
+        If dir does not exit yet, it will be created.
+    ext : str, optional
+        Description
+    ext (string) file extension, supported by igraph.save()
+        If not one of the following, the default 'gml' will be applied.
+        'adjacency', 'dimacs', 'dot', 'graphviz', 'edgelist', 'edges',
+        'edge', 'gml', 'graphml', 'graphmlz', 'gw', 'leda', 'lgl', 'lgr',
+        'ncol', 'net', 'pajek', 'pickle', 'picklez', 'svg'
 
-    Returns:
-        List of igraph.Graph objects in order of `comms`
+    Returns
+    -------
+    list
+        List of igraph.Graph objects in order of ``comms``
     """
     import igraph as ig
     ext_list = ['adjacency', 'dimacs', 'dot', 'graphviz', 'edgelist', 'edges',
@@ -103,27 +98,35 @@ def to_igraph(vdf, edf, pmax, comms=None, peak=None, save_dir=None, ext='gml'):
 def to_nx(vdf, edf, pmax, comms=None, save_dir=None):
     """Convert to networkx graph representation
 
-    Args:
-        vdf ([Geo]DataFrame): Holding Vertex Data id=Vertex
-            and Commodity Sources as columns
-        edf ([Geo]DataFrame): Holding (V1,V2) Multi-indexed Edge data
-            To be sure, that all edges are created.
-        pmax (DataFrame): Commodities as columns with max capacity per edge
-            returned by rivus.get_constants()
-        comms (iterable, optional): Names of the commodities from which we
-            build the graphs. (Each as separate graph.) If omitted, the columns
-            of pmax will be used.
-        save_dir (path string, optional): Path to a dir to save graphs as GML.
-            Path preferably constructed using the `os.path` module
-            If dir does not exit yet, it will be created.
+    Parameters
+    ----------
+    vdf : [Geo]DataFrame
+        Holding Vertex Data id=Vertex
+        and Commodity Sources as columns
+    edf : [Geo]DataFrame
+        Holding (V1,V2) Multi-indexed Edge data
+        To be sure, that all edges are created.
+    pmax : DataFrame
+        Commodities as columns with max capacity per edge
+        returned by rivus.get_constants()
+    comms : iterable, optional
+        Names of the commodities from which we
+        build the graphs. (Each as separate graph.) If omitted, the columns
+        of pmax will be used.
+    save_dir : path string, optional
+        Path to a dir to save graphs as GML.
+        Path preferably constructed using the `os.path` module
+        If dir does not exit yet, it will be created.
 
-    Returns:
-        list of nx_graph object per in accordance with input `comms`
-        or commodities found in pmax.columns
+    Returns
+    -------
+    list of nx_graph object per in accordance with input `comms`
+    or commodities found in pmax.columns
 
-    Note:
-        nx.from_pandas_dataframe() was also investigated, but it is a bit
-        slower and does not improve code quality in my opinion.
+    Note
+    ----
+    nx.from_pandas_dataframe() was also investigated, but it is a bit
+    slower and does not improve code quality in my opinion.
     """
     import networkx as nx
     comms = pmax.columns.values if comms is None else comms

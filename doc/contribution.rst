@@ -70,7 +70,7 @@ with a nice documentation.
   - Kinda needed at PR acceptance
 
 **************
-Documentation
+Doc TODOs
 **************
 Summary of the ToDos from the *whole* documentation.
 

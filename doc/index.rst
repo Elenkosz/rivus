@@ -18,8 +18,9 @@ rivus: A mixed integer linear optimisation model for energy infrastructure netwo
 
    intro
    overview
-   reference
-   math_reference
+   reference-data
+   reference-subs
+   reference-math
    contribution
 
 ***********************
@@ -55,12 +56,16 @@ Unified rivus capacity output of a smaller city.
 
 Yellow:
   Electricity network capacities
+
 Red:
   Heat network capacities
+
 Brown:
   Gas network capacities
+
 Gray:
   Longitude and latitude guidelines.
+
 Symbols:
   Diamond shapes represent energy sources.
   The width of the lines represent the amount of built capacity.

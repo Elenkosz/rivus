@@ -994,8 +994,8 @@ def plot(prob, commodity, plot_demand=False, mapscale=False, tick_labels=True,
     consumed (Sigma, peak).
 
     Args:
-        prob:
-        commodity:
+        prob: rivus ConcreteModel
+        commodity: str like `Elec`, `Heat` etc.
         plot_demand: If True, plot demand, else plot capacities
         mapscale: If True, add mapscale to plot (default: False)
         tick_labels: If True, add lon/lat tick labels (default: True)
@@ -1005,7 +1005,7 @@ def plot(prob, commodity, plot_demand=False, mapscale=False, tick_labels=True,
                    "type" and colors in constan rivus.COLORS; else use default
                    COLOR['building'] for all
         shapefiles: list of dicts of shapefiles that shall be drawn by
-                    basemap function readshapefile. is passed as **kwargs
+                    basemap function readshapefile. is passed as `**kwargs`
         decoration: Switch for map decoration (meridian, parallels)
     Returns:
         fig: the map figure object
@@ -1327,7 +1327,7 @@ def result_figures(prob, file_basename, buildings=None, shapefiles=None):
         file_basename: filename prefix for figures
         buildings: optional filename to buildings shapefile
         shapefiles: list of dicts of shapefiles that shall be drawn by
-                    basemap function readshapefile. is passed as **kwargs
+                    basemap function readshapefile. is passed as `**kwargs`
     Returns:
         Nothing
     """
@@ -1451,20 +1451,24 @@ def save(prob, filepath):
     with gzip.GzipFile(filename, 'wb') as file_handle:
         pickle.dump(prob, file_handle)
 
-def load(filename):
+def load(filepath):
     """Load a rivus model instance from a gzip'ed pickle file
-
-    Args:
-        filename: pickle file
-
-    Returns:
-        prob: the unpickled rivus model instance
+    
+    Parameters
+    ----------
+    filepath
+        absolute or relative path to gzip'd pickle file
+    
+    Returns
+    -------
+    prob
+        the unpickled rivus model instance
     """
     import gzip
     try:
         import cPickle as pickle
     except ImportError:
         import pickle
-    with gzip.GzipFile(filename, 'r') as file_handle:
+    with gzip.GzipFile(filepath, 'r') as file_handle:
         prob = pickle.load(file_handle)
     return prob

@@ -135,6 +135,7 @@ Input from gridder
 ====================
 
 -  The notebook `Square grid`_ leads you through the input creation in depth.
+
 .. _Square grid: https://nbviewer.jupyter.org/gist/lnksz/bd8ce0a79e499479b61ea7b45d5c661d
 
 Summary of the usage of gridder:
@@ -269,9 +270,9 @@ IO
   This module covers the most of the SQL-world and offers a convenient way to interact with a set up data. A `separate documentation <http://rivus-db.readthedocs.io/en/latest/>`_ was dedicated to help users started, and document the now awaited data structure.
 
 Graph
-  Convert the resulting tabular data, which represent the built commodity carrier grids (electicity grid, Gas pipelines, district heating/cooling grid etc.) into a graph (network) format of either NetworX_ or python-igraph_. Moreover, the file export functions of these libraries were bridged into a module in this sub-package. (Preferred file format is ``.gml`` which is supported by all common graph analysis tools. E.g. Gephi_ the Open-source de-facto tool for advanced graph visualisation and analysis.)
+  Convert the resulting tabular data, which represent the built commodity carrier grids (electicity grid, Gas pipelines, district heating/cooling grid etc.) into a graph (network) format of either NetworkX_ or python-igraph_. Moreover, the file export functions of these libraries were bridged into a module in this sub-package. (Preferred file format is ``.gml`` which is supported by all common graph analysis tools. E.g. Gephi_ the Open-source de-facto tool for advanced graph visualisation and analysis.)
 
-  After the data is in their expected format, both NetworX_ and python-igraph_ offer very advanced opportunities to analyse graphs. You can look up what you need in their documentation. Nevertheless, some basic analyse wrapper is provided to get the result for the most common questions about graph connectivity.
+  After the data is in their expected format, both NetworkX_ and python-igraph_ offer very advanced opportunities to analyse graphs. You can look up what you need in their documentation. Nevertheless, some basic analyse wrapper is provided to get the result for the most common questions about graph connectivity.
 
 Converter
   The only sub-package, which were not intended to be used by import, but as a container for separate scripts which facilitate data preparation from real-world street network data sources.
