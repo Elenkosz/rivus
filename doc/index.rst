@@ -18,9 +18,9 @@ rivus: A mixed integer linear optimisation model for energy infrastructure netwo
 
    intro
    overview
-   reference-data
-   reference-subs
-   reference-math
+   reference_data
+   reference_subs
+   reference_math
    contribution
 
 ***********************
