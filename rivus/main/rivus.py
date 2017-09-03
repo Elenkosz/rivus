@@ -1,8 +1,6 @@
-"""rivus: optimization model for distributed urban energy systems
+# rivus: optimization model for distributed urban energy systems
+# rivus optimizes topology and size of urban energy networks, energy conversion.
 
-rivus optimizes topology and size of urban energy networks, energy conversion.
-
-"""
 import warnings
 try:
     import pyomo.core as pyomo
@@ -59,19 +57,19 @@ to_rgb = lambda r,g,b: tuple(x/255. for x in (r,g,b))
 for key, val in COLORS.items():
     COLORS[key] = to_rgb(*val)
 
-def read_excel(filename):
+def read_excel(filepath):
     """Read Excel input file and prepare rivus input data dict.
 
     Reads an Excel spreadsheet that adheres to the structure shown in the
     example dataset data/mnl/mnl.xlsx. Must contain
 
     Args:
-        filename: filename to an Excel spreadsheet.
+        filepath: absolute or relative filepath to an Excel spreadsheet.
 
     Returns:
         a dict of 5 DataFrames, one for each sheet
     """
-    with pd.ExcelFile(filename) as xls:
+    with pd.ExcelFile(filepath) as xls:
         commodity = (
             xls.parse('Commodity', parse_cols='A:J')
                .set_index(['Commodity']))
@@ -105,20 +103,29 @@ def read_excel(filename):
 def create_model(data, vertex, edge, peak_multiplier=None,
                  hub_only_in_edge=True):
     """Return a rivus model instance from input file and spatial input.
-
-    Args:
-        spreadsheet: Excel spreadsheet with entity sheets Commodity, Process,
-            Process-Commodity, Time and Area-Demand
-        vertex: DataFrame with vertex IDs as column 'Vertex' and other columns
-            named like source commodities (e.g. 'Gas', 'Elec', 'Pellets'),
-            containing source vertex capacities (in kW)
-        edge: DataFrame woth vertex IDs in columns 'Vertex1' and 'Vertex2' and
-            other columns named like area types (in spreadsheet/Area-Demand),
-            containing total areas (square metres) to be supplied
-
-    Returns:
-        Pyomo ConcreteModel object
-
+    
+    Parameters
+    ----------
+    data
+        Processed Excel spreadsheet by ``read_excel``
+    vertex
+        DataFrame with vertex IDs as column 'Vertex' and other columns
+        named like source commodities (e.g. 'Gas', 'Elec', 'Pellets'),
+        containing source vertex capacities (in kW)
+    edge
+        DataFrame with vertex IDs in columns 'Vertex1' and 'Vertex2' and
+        other columns named like area types (in spreadsheet/Area-Demand),
+        containing total areas (square metres) to be supplied
+    peak_multiplier : callable, optional
+        If not None and bool-casts to True, then m.peak will be calculated
+        by calling ``m.peak = peak_multiplier(m)``
+    hub_only_in_edge : bool, optional
+        Temporary switch between original and fixed process handling.
+    
+    Returns
+    -------
+    Pyomo ConcreteModel object
+    
     """
     m = pyomo.ConcreteModel()
     m.name = 'rivus'
@@ -1411,25 +1418,33 @@ def save_log(result, filename):
         file_handle.write(str(result))
 
 
-def save(prob, filename):
+def save(prob, filepath):
     """Save rivus model instance to a gzip'ed pickle file
-
+    
     Pickle is the standard Python way of serializing and de-serializing Python
     objects. By using it, saving any object, in case of this function a
     Pyomo ConcreteModel, becomes a twoliner.
-    <https://docs.python.org/2/library/pickle.html>
     GZip is a standard Python compression library that is used to transparently
     compress the pickle file further.
-    <https://docs.python.org/2/library/gzip.html>
     It is used over the possibly more compact bzip2 compression due to the
-    lower runtime. Source: <http://stackoverflow.com/a/18475192/2375855>
-
-    Args:
-        prob: a rivus model instance
-        filename: pickle file to be written
-
-    Returns:
-        Nothing
+    lower runtime.
+    
+    Parameters
+    ----------
+    prob
+        a rivus model instance
+    filepath
+        pickle file to be written
+    
+    Notes
+    -----
+    `Pickle <https://docs.python.org/2/library/pickle.html>`_
+    `GZIP <https://docs.python.org/2/library/gzip.html>`_
+    `<>bzip2 <http://stackoverflow.com/a/18475192/2375855>`_
+    
+    No Longer Returned
+    ------------------
+    Nothing
     """
     import gzip
     try:
