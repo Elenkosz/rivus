@@ -896,14 +896,14 @@ def get_onset_names(entity):
 def get_constants(prob):
     """Retrieve time-independent variables/quantities.
 
-    Usage:
-        costs, Pmax, Kappa_hub, Kappa_process = get_constants(prob)
-
     Args:
         prob: a rivus model instance
 
     Returns:
-        (costs, Pmax, Kappa_hub) tuple
+        (costs, pmax, kappa_hub, kappa_process) tuple
+
+    Example:
+        costs, pmax, kappa_hub, kappa_process = get_constants(prob)
     """
     costs = get_entity(prob, 'costs')
     Pmax = get_entity(prob, 'Pmax')
@@ -944,7 +944,7 @@ def get_constants(prob):
 def get_timeseries(prob):
     """Retrieve time-dependent variables/quantities.
 
-    Usage:
+    Example:
         source, flows, hubs, proc_io, proc_tau = get_timeseries(prob)
 
     Args:
@@ -1442,9 +1442,6 @@ def save(prob, filepath):
     `GZIP <https://docs.python.org/2/library/gzip.html>`_
     `<>bzip2 <http://stackoverflow.com/a/18475192/2375855>`_
     
-    No Longer Returned
-    ------------------
-    Nothing
     """
     import gzip
     try:

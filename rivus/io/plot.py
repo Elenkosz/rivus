@@ -395,7 +395,7 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
         layout (None, optional): A plotly layout dict to overwrite default.
         verbose (bool, optional): To print out progress and the time it took.
 
-    Usage:
+    Example:
         import plotly.offline as po
         fig = fig3d(prob, ['Gas', 'Heat', 'Elec'], hub_opac=0.55, linescale=7)
         # for static image

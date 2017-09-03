@@ -28,7 +28,7 @@ def setup_solver(optim, logfile='solver.log', guro_time_lim=12000,
             If less than CPU_count then Thread is set with the parameter
         log_to_console (Boolean, optional) If False, the output of the solver
             is not piped to the stdout.
-    Usage:
+    Example:
         optim = SolverFactory('glpk')
         optim = setup_solver(optim, logfile=log_filename)
     """
