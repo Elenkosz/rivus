@@ -69,7 +69,7 @@ def read_excel(filename):
         filename: filename to an Excel spreadsheet.
 
     Returns:
-        a dict of 6 DataFrames, one for each sheet
+        a dict of 5 DataFrames, one for each sheet
     """
     with pd.ExcelFile(filename) as xls:
         commodity = (
@@ -1319,7 +1319,8 @@ def result_figures(prob, file_basename, buildings=None, shapefiles=None):
         prob: a rivus model instance
         file_basename: filename prefix for figures
         buildings: optional filename to buildings shapefile
-
+        shapefiles: list of dicts of shapefiles that shall be drawn by
+                    basemap function readshapefile. is passed as **kwargs
     Returns:
         Nothing
     """
