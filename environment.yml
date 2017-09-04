@@ -2,7 +2,7 @@ name: fion
 channels:
 - conda-forge
 dependencies:
-- networkx
+- python=3.4
 - numpy
 - pandas
 - xlrd
