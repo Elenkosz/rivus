@@ -2,7 +2,7 @@ name: rivus
 channels:
 - conda-forge
 dependencies:
-  - python=3.4
+  - python=3.5
   - numpy
   - pandas
   - xlrd
@@ -14,7 +14,6 @@ dependencies:
   - basemap
   - pyproj
   - geopy
-  - fiona
   - plotly
   - networkx
   - psycopg2
