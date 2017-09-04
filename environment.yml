@@ -13,7 +13,6 @@ dependencies:
   - shapely
   - basemap
   - pyproj
-  - fiona
   - geopy
   - geopandas
   - plotly
