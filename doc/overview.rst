@@ -210,6 +210,26 @@ in the :ref:`reference <a_subpacks>`
 Structuring
 *************
 
+Repo Scope
+===========
+
+.. todo::
+  
+  Add list and description of most important files.
+
+readthedocs.yml
+  `Configuration file <http://docs.readthedocs.io/en/latest/yaml-config.html>`_ for the documentation building on readthedocs server. Now it defines the python version and the conda environment configuration file for the build system. This is how we can use napoleon_ (autodoc_) to document our functions nicely.
+
+.. _nepoleon: http://www.sphinx-doc.org/en/stable/ext/napoleon.html
+.. _autodoc: http://www.sphinx-doc.org/en/stable/ext/autodoc.html
+
+
+
+
+
+Package Scope
+==============
+
 .. _a_rivus_pack:
 .. figure:: img/rivus-modules2.png
   :scale: 55 %

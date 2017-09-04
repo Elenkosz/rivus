@@ -57,6 +57,12 @@ With Miniconda_. (A minimal distribution of the Anaconda_ package manager.)
 If you already have Anaconda_ already installed, you are also good to go.
 
 Create a clean environment with the used packages from the SciPy stack:
+
+Get everything up and running with a one-liner (advanced, mainly for doc-build on readthedocs server):
+::
+  conda env create -f environment.yml
+
+Start with step-by-step installation process:
 ::
 
   conda create --name rivus python=3.6 numpy pandas xlrd openpyxl jupyter
