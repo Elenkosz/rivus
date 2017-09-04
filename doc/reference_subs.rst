@@ -74,7 +74,6 @@ rivus\.gridder
 ===============
 
 .. todo:: Grid
-    :name: gridder
 
     Add gridder visualization
 
