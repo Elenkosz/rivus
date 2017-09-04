@@ -21,3 +21,5 @@ dependencies:
   - sqlalchemy
   - python-igraph
   - icu=56.*
+  - pip:
+      - fiona
