@@ -14,12 +14,11 @@ dependencies:
   - basemap
   - pyproj
   - geopy
-  - geopandas
+  - fiona
   - plotly
   - networkx
   - psycopg2
   - sqlalchemy
   - python-igraph
-  - icu=56.*
   - pip:
-      - fiona
+      - geopandas
