@@ -1,26 +1,23 @@
-name: fion
+name: rivus
 channels:
 - conda-forge
 dependencies:
-- python=3.4
-- numpy
-- pandas
-- xlrd
-- openpyxl
-- pyomo
-- glpk
-- pyshp
-- shapely
-- basemap
-- pyproj
-- fiona
-- geopy
-- geopandas
-- plotly
-- networkx
-- psycopg2
-- sqlalchemy
-- python-igraph
-- pip:
-
-
+  - python=3.4
+  - numpy
+  - pandas
+  - xlrd
+  - openpyxl
+  - pyomo
+  - glpk
+  - pyshp
+  - shapely
+  - basemap
+  - pyproj
+  - fiona
+  - geopy
+  - geopandas
+  - plotly
+  - networkx
+  - psycopg2
+  - sqlalchemy
+  - python-igraph
