@@ -42,8 +42,11 @@ def setup_solver(optim, logfile='solver.log', guro_time_lim=12000,
 
     Example
     -------
-    optim = SolverFactory('glpk')
-    optim = setup_solver(optim, logfile=log_filename)
+    ::
+
+
+        optim = SolverFactory('glpk')
+        optim = setup_solver(optim, logfile=log_filename)
 
     Returns
     -------

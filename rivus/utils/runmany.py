@@ -34,6 +34,26 @@ def parameter_range(data_df, index, column, lim_lo=None, lim_up=None,
     ------
     DataFrame
         A modified version of xls[df_name]
+
+    Example
+    --------
+    ::
+
+        data = read_excel(data_spreadsheet)
+        interesting_parameters = [
+            {'df_name': 'commodity',
+             'args': {'index': 'Heat',
+                      'column': 'cost-inv-fix',
+                      'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}},
+            {'df_name': 'commodity',
+             'args': {'index': 'Heat',
+                      'column': 'cost-fix',
+                      'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}}]
+        for param in interesting_parameters :
+            sheet = data[param['df_name']]
+            param_path = param['args']
+            for variant in parameter_range(sheet, **param_path):
+                ...
     """
     df = data_df.copy()  # Leave the original untouched
     is_multi = len(df.index.names) > 1

@@ -872,9 +872,10 @@ def list_entities(instance, entity_type):
 
 
 def get_onset_names(entity):
-    """
+    """ Get onset names of model entity
     Example:
     ::
+
         vertex, edge = create_square_grid()
         data = read_excel('data-example.xlsx')
         model = create_model(data, vertex, edge)

@@ -153,6 +153,21 @@ Moreover, the possibility to have an input generator integrated into ``rivus`` i
 
 create_grid
 ----------------
+
+.. testsetup:: create_grid
+
+    from rivus.gridder.create_grid import create_square_grid
+
+.. testcode:: create_grid
+
+    vertex, edge = create_square_grid()
+    print(vertex.head())
+    print("Hello")
+
+.. testoutput:: create_grid
+
+
+
 .. automodule:: rivus.gridder.create_grid
     :members:
 
@@ -217,36 +232,41 @@ rivus\.plot
 
 Interactive 3D data visualization! See live example `here <https://plot.ly/~lnksz/46/>`_ (May take a while to load.)
 
+Plotly has a great `documentation <https://plot.ly/python/reference/#scatter3d>`_ and an extensive
+`examples library <https://plot.ly/python/>`_.
+
+It is available also available as a JavaScript library, which can help when a web-app GUI is added to rivus. (Client-side visualization.)
+
+To ensure interoperability, it thinks in dictionaries (JSONs). This gives a greater flexibility then e.g. the API of matplotlib.
+
+Adding extra hove-over information (line length, capacity, you-name-it) is also highly flexible.
+
+The structure can be explained easily:
+::
+
+    data = cap_layers + hub_layer + markers
+    fig = dict(data=data, layout=layout)
+
+where ``cap_layers``, ``hub_layer`` and ``markers`` simply lists of dictionaries are, which dictionaries have the key-value pairs of the `Scatter3d <https://plot.ly/python/reference/#scatter3d>`_ structure (class).
+
+We use raw dicts instead of Plotly's "classes" because they are mainly the same, but much faster.
+Still, Loading the plot can take a while if there are a lot of elements to render. (For each edge we have a scatter3d dict in the ``data`` list, which are grouped together by the same ``legendgroup`` key value.)
+
+The plot consists of layers, stacked upon each other. Each of these represent a commodity. All of the edges are shown in each layer, but if in one no carrier was built, it is displayed dashed. If the edge is stroked through, some amount of capacity was built out there. The width of the edges are in proportion with that amount.
+
+Diamond shapes represent the sources in the vertices.
+
+Vertical lines show processes (commodity conversions).
+
+All of the elements can be toggled with the help of the menu in the upper right corner.
+
+.. note::
+
+    As the legends (with which you can turn off/on the layers) are generated from the first elements per legend-groups in the data list, there are now dummies as first ones to ensure a nicer look.
+
 .. automodule:: rivus.io.plot
     :members:
 
-***********************
-rivus\.test
-***********************
-
-test\_db
-----------------
-
-.. automodule:: rivus.tests.test_db
-    :members:
-
-test\_gridder
-----------------
-
-.. automodule:: rivus.tests.test_gridder
-    :members:
-
-test\_main
-----------------
-
-.. automodule:: rivus.tests.test_main
-    :members:
-
-test\_utils
-----------------
-
-.. automodule:: rivus.tests.test_utils
-    :members:
 
 ***********************
 rivus\.utils
@@ -274,4 +294,48 @@ pandashp
 ----------------
 
 .. automodule:: rivus.utils.pandashp
+    :members:
+
+***********************
+rivus\.test
+***********************
+
+Write tests to every function where there are clearly definable input(s) and output(s).
+
+Enlighten the main logic of the test here if it is not trivial.
+
+test\_db
+-----------
+
+.. automodule:: rivus.tests.test_db
+    :members: RivusDBTest
+
+.. autoclass:: RivusDBTest
+    :members:
+
+test\_gridder
+----------------
+
+.. automodule:: rivus.tests.test_gridder
+    :members:
+
+.. autoclass:: RivusGridTest
+    :members:
+
+test\_main
+----------------
+
+.. automodule:: rivus.tests.test_main
+    :members:
+
+.. autoclass:: RivusMainTest
+    :members:
+
+test\_utils
+----------------
+
+.. automodule:: rivus.tests.test_utils
+    :members:
+
+.. autoclass:: RivusUtilsTest
     :members:

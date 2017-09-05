@@ -377,8 +377,7 @@ def _add_edges(prob, bm, comms, comm_zs, pmax, hubs, proc, source, dz=5,
 
 def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
           layout=None, verbose=False):
-    """
-    Generate 3D representation of the rivus results using plotly
+    """Generate 3D representation of the rivus results using plotly
 
     Parameters
     ----------
@@ -416,7 +415,9 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
 
     Note
     -----
-
+        Greatly inspired by
+        `Example1 <https://plot.ly/python/lines-on-maps/>`_ and
+        `Example2 <https://plot.ly/python/3d-network-graph/>`_.
     """
     if verbose:
         import time
