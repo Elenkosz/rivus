@@ -149,6 +149,8 @@ def _purge_table(engine, table, run_id):
 
 def purge_run(engine, run_id):
     """Delete all rows related to run_id across all tables.
+    **This is not a throughout reliable function, and can do some harm.
+    Use it with caution, and at your own risk!**
 
     Parameters
     ----------

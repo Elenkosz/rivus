@@ -70,7 +70,7 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
     dy : None, optional
         length of the vertical edges (in meters)
     noise_prop : float, optional
-        0.0 to MAX_NOISE < 1.0 effectively a relative missplacement radius
+        0.0 to MAX_NOISE (< 1.0) missplacement radius relative to dx and dy.
     epsg : int, optional
         If a valid epsg code which is supported py pyproy,
         the coordinates are calculated in the carthesian UTM CRS
@@ -95,19 +95,23 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
     Sequence of IDs:
     From buttom left to upper right.
     From row to row.
-    From left to right
+    From left to right.
 
     .. code-block:: none
 
-        (6)══04══(7)══05══(8)
-         ║        ║        ║
-         7        9        11
-         ║        ║        ║
-        (3)══02══(4)══03══(4)
-         ║        ║        ║
-         6        8        10
-         ║        ║        ║
-        (0)══00══(1)══01══(2)
+        bearing 0
+
+              (6)══04══(7)══05══(8)
+               ║        ║        ║
+               7        9        11
+               ║        ║        ║
+              (3)══02══(4)══03══(4)
+        ^      ║        ║        ║
+       (y)     6        8        10
+        L      ║        ║        ║
+        A     (0)══00══(1)══01══(2)
+        T
+          LON (x) -> bearing 90
 
     Raises
     ------
@@ -143,6 +147,8 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
         startp = gPoint([lat, lon])
         # create the grid coordinates
         for _ in range(num_vert_y):
+            # In lon(x), lat(y) order to be passed to Shapeley.Point()
+            # Bearing 90->East 0->North
             points.append([startp.longitude, startp.latitude])
             _startp = startp
             for _ in range(num_edge_x):
@@ -172,10 +178,10 @@ def create_square_grid(origo_latlon=(48.26739, 11.66842), num_edge_x=1,
             else:
                 lon, lat = xy
                 fromP = gPoint([lat, lon])
-                londist = distance(meters=(fuzz_radius_x * np.random.rand()))
-                latdist = distance(meters=(fuzz_radius_y * np.random.rand()))
-                newX = latdist.destination(point=fromP, bearing=0)
-                newY = londist.destination(point=fromP, bearing=90)
+                lon_dist = distance(meters=(fuzz_radius_x * np.random.rand()))
+                lat_dist = distance(meters=(fuzz_radius_y * np.random.rand()))
+                newX = lon_dist.destination(point=fromP, bearing=90)
+                newY = lat_dist.destination(point=fromP, bearing=0)
                 return [newX.longitude, newY.latitude]
         points = list(map(lambda xy: _fuzz(xy), points))
 

@@ -127,9 +127,29 @@ analysis
 rivus\.gridder
 ***********************
 
-.. todo:: Grid
+The birth of this module originates to the intention to regard the linear optimization model as a natural phenomenon. As usual approach in natural sciences, we abstract the specific question in focus, removing the "noise" of real-world data and homogenize the otherwise heterogeneous input data.
 
-    Add gridder visualization
+After gaining understanding of the highly symmetric model, the noise and asymmetries can be added back in an iterative process. Thus testing the validity of our findings.
+
+As the first approach, a symmetric grid generator is implemented, which can be highly parametrized and can create input for :func:`create_model` only in few lines of code.
+
+.. figure:: img/sq_grids1.png
+    :scale: 55 %
+    :align: center
+
+    Adding noise to the grid. (x, and y edge length can be also set separately.)
+
+Moreover, the possibility to have an input generator integrated into ``rivus`` itself has proven itself useful in many ways. Testing the implemented paradigms can be more intuitive in a symmetric environment, and the ability to rapidly showcase little optimization projects can serve as a demonstration tool accompanying relevant lectures.
+
+.. note::
+
+    A highly symmetric square grid may seem far-fetched from real-life street structures.
+    However, remember the `grid street plan`_ which has been around since the Greeks and is to be found all over the world. So, it is maybe not such a bad starting point as considered it may seem at the first glance.
+
+    Short example set of cities `Google Maps Set <https://drive.google.com/open?id=1RVHltVd7eix_e7cP1ZRY3NEawcE&usp=sharing>`_.
+
+.. _grid street plan: https://en.wikipedia.org/wiki/Grid_plan
+.. _`Google Maps Set`: https://drive.google.com/open?id=1RVHltVd7eix_e7cP1ZRY3NEawcE&usp=sharing
 
 create_grid
 ----------------
@@ -154,7 +174,7 @@ a throughout description of the set-up process is documented in rivus-db_.
 There you can find help from the entry level (install, create database) to more
 advanced topics (queries, data archive).
 
-In this module presents a convenient way to interact with the your PostgreSQL database.
+In this module presents a convenient way to interact with your PostgreSQL database.
 
 Store example
 ::
@@ -185,6 +205,8 @@ Import example
 
     prob = create_model(data, vertex, edge, hub_only_in_edge=False)
 
+`Example queries <http://rivus-db.readthedocs.io/en/latest/reference.html#report-analysis>`_  with results and short descriptions are part of the separate documentation.
+
 .. _rivus-db: http://rivus-db.readthedocs.io
 
 .. automodule:: rivus.io.db
@@ -192,6 +214,9 @@ Import example
 
 rivus\.plot
 ----------------
+
+Interactive 3D data visualization! See live example `here <https://plot.ly/~lnksz/46/>`_ (May take a while to load.)
+
 .. automodule:: rivus.io.plot
     :members:
 
