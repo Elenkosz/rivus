@@ -1,6 +1,3 @@
-""" plotting functions for rivus result visualisation
-    Kristof Havasi
-"""
 from pandas import Series
 from numpy import union1d
 import math
@@ -383,27 +380,43 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
     """
     Generate 3D representation of the rivus results using plotly
 
-    Args:
-        prob (rivus_archive): A rivus model (later extract of it)
-        comms (None, optional): list/ndarray of commodity names to plot,
-               Order: ['C1', 'C2', 'C3'] -> Bottom: C1, Top: C3
-        linescale (float, optional):
-            A multiplier to get proportionally thicker lines.
-        use_hubs (bool, optional): Switch to depict hub processes.
-        hub_opac (float, optional): 0-1 opacity param.
-        dz (number, optional): Distance between layers along 'z' axis .
-        layout (None, optional): A plotly layout dict to overwrite default.
-        verbose (bool, optional): To print out progress and the time it took.
+    Parameters
+    ----------
+    prob : rivus_archive
+        A rivus model (later extract of it)
+    comms : None, optional
+        list/ndarray of commodity names to plot,
+        Order: ['C1', 'C2', 'C3'] -> Bottom: C1, Top: C3
+    linescale : float, optional
+        A multiplier to get proportionally thicker lines.
+    use_hubs : bool, optional
+        Switch to depict hub processes.
+    hub_opac : float, optional
+        0-1 opacity param.
+    dz : number, optional
+        Distance between layers along 'z' axis .
+    layout : None, optional
+        A plotly layout dict to overwrite default.
+    verbose : bool, optional
+        To print out progress and the time it took.
 
-    Example:
+    Example
+    -------
+    ::
+
         import plotly.offline as po
         fig = fig3d(prob, ['Gas', 'Heat', 'Elec'], hub_opac=0.55, linescale=7)
         # for static image
         # po.plot(fig, filename='plotly-game.html', image='png')
         po.plot(fig, filename='plotly-game.html')
 
-    Returns:
-        plotly compatible figure *dict* (in plotly everything is kinda a dict.)
+    Returns
+    -------
+    plotly compatible figure *dict* (in plotly everything is kinda a dict.)
+
+    Note
+    -----
+
     """
     if verbose:
         import time
@@ -432,18 +445,26 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
         # Figure out commodities involved through processes
         proc_used = kappa_process.columns.values
         if len(proc_used):
-            proc_comms = (prob.r_in.loc[proc_used].index
-                          .get_level_values(level='Commodity')
-                          .union(prob.r_out.loc[proc_used].index
-                                 .get_level_values(level='Commodity')))
+            proc_comms = (prob.r_in.sort_index(
+                level=['Process', 'Commodity'], ascending=[1, 0])
+                .loc[proc_used].index
+                .get_level_values(level='Commodity')
+                .union(prob.r_out.sort_index(
+                    level=['Process', 'Commodity'], ascending=[1, 0])
+                    .loc[proc_used].index
+                    .get_level_values(level='Commodity')))
             comms = union1d(comms, proc_comms.values)
         # Figure out commodities involved through hubs
         hubs_used = kappa_hub.columns.values
         if len(hubs_used):
-            hub_comms = (prob.r_in.loc[hubs_used].index
-                         .get_level_values(level='Commodity')
-                         .union(prob.r_out.loc[hubs_used].index
-                                .get_level_values(level='Commodity')))
+            hub_comms = (prob.r_in.sort_index(
+                level=['Process', 'Commodity'], ascending=[1, 0])
+                .loc[hubs_used].index
+                .get_level_values(level='Commodity')
+                .union(prob.r_out.sort_index(
+                    level=['Process', 'Commodity'], ascending=[1, 0])
+                    .loc[hubs_used].index
+                    .get_level_values(level='Commodity')))
             comms = union1d(comms, hub_comms.values)
         comms = sorted(comms, key=lambda comm: comm_order[comm])
 
