@@ -4,8 +4,8 @@ import os
 
 
 def to_igraph(vdf, edf, pmax, comms=None, peak=None, save_dir=None, ext='gml'):
-    """Convert Data from (Geo)DataFrames to igraph(s)
-    Each commodity gets its own graph
+    """Convert Data from (Geo)DataFrames to python-igraph's Graph class
+    Each commodity gets its own graph.
     Weights are derived from built capacity.
 
     Parameters
@@ -41,7 +41,13 @@ def to_igraph(vdf, edf, pmax, comms=None, peak=None, save_dir=None, ext='gml'):
     Returns
     -------
     list
-        List of igraph.Graph objects in order of ``comms``
+        List of igraph.Graph objects in order of ``comms``. Graphs are undirected and weighted.
+
+    Example
+    -------
+    ::
+        _, pmax, _, _ = get_constants(prob)
+        graphs = to_igraph(vertex, edge, pmax, ['Gas', 'Heat'])
     """
     import igraph as ig
     ext_list = ['adjacency', 'dimacs', 'dot', 'graphviz', 'edgelist', 'edges',
@@ -120,12 +126,18 @@ def to_nx(vdf, edf, pmax, comms=None, save_dir=None):
 
     Returns
     -------
-    list of nx_graph object per in accordance with input `comms`
-    or commodities found in pmax.columns
+    list
+        nx_graph objects in accordance with input `comms` or all commodities found in pmax.columns
+
+    Example
+    -------
+    ::
+        _, pmax, _, _ = get_constants(prob)
+        graphs = to_nx(vertex, edge, pmax, ['Gas', 'Heat'])
 
     Note
     ----
-    nx.from_pandas_dataframe() was also investigated, but it is a bit
+    nx.from_pandas_dataframe() was also investigated for conversion, but it is a bit
     slower and does not improve code quality in my opinion.
     """
     import networkx as nx

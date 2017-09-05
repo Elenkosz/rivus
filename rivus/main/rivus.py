@@ -57,17 +57,28 @@ to_rgb = lambda r,g,b: tuple(x/255. for x in (r,g,b))
 for key, val in COLORS.items():
     COLORS[key] = to_rgb(*val)
 
+
 def read_excel(filepath):
     """Read Excel input file and prepare rivus input data dict.
 
     Reads an Excel spreadsheet that adheres to the structure shown in the
     example dataset data/mnl/mnl.xlsx. Must contain
 
-    Args:
-        filepath: absolute or relative filepath to an Excel spreadsheet.
+    Parameters
+    ----------
+    filepath : str
+        absolute or relative filepath to an Excel spreadsheet.
 
-    Returns:
-        a dict of 5 DataFrames, one for each sheet
+    Returns
+    -------
+    dict
+        5 DataFrames, one for each sheet
+
+    Example
+    --------
+    ::
+
+        data = read_excel('./data/mnl/data.xlsx')
     """
     with pd.ExcelFile(filepath) as xls:
         commodity = (
@@ -103,16 +114,16 @@ def read_excel(filepath):
 def create_model(data, vertex, edge, peak_multiplier=None,
                  hub_only_in_edge=True):
     """Return a rivus model instance from input file and spatial input.
-    
+
     Parameters
     ----------
-    data
+    data : dict
         Processed Excel spreadsheet by ``read_excel``
-    vertex
+    vertex : GeoDataFrame
         DataFrame with vertex IDs as column 'Vertex' and other columns
         named like source commodities (e.g. 'Gas', 'Elec', 'Pellets'),
         containing source vertex capacities (in kW)
-    edge
+    edge : GeoDataFrame
         DataFrame with vertex IDs in columns 'Vertex1' and 'Vertex2' and
         other columns named like area types (in spreadsheet/Area-Demand),
         containing total areas (square metres) to be supplied
@@ -121,11 +132,16 @@ def create_model(data, vertex, edge, peak_multiplier=None,
         by calling ``m.peak = peak_multiplier(m)``
     hub_only_in_edge : bool, optional
         Temporary switch between original and fixed process handling.
-    
+
     Returns
     -------
     Pyomo ConcreteModel object
-    
+
+    Note
+    ----
+    This function will change its input objects!
+    (Reindex, insertion of values.)
+
     """
     m = pyomo.ConcreteModel()
     m.name = 'rivus'
@@ -673,25 +689,33 @@ def line_length(line):
     # leaving the shapely lonlat order
     # return sum(distance(a, b).meters for (a, b) in pairs(line.coords))
     # new latlon order, with rounding to cm, as more numerical precision is useless
-    return round(sum(distance((a[-1],a[0]), (b[-1],b[0])).meters for (a, b) in pairs(line.coords)), 2)
+    return round(sum(distance((a[-1], a[0]), (b[-1], b[0])).meters
+                     for (a, b) in pairs(line.coords)), 2)
 
 
 def pairs(lst):
     """Iterate over a list in overlapping pairs without wrap-around.
 
-    Args:
-        lst: an iterable/list
+    Parameters
+    ----------
+    lst : iterable/list
+        to yield pairs from
 
-    Returns:
-        Yields a pair of consecutive elements (lst[k], lst[k+1]) of lst. Last
-        call yields the last two elements.
+    Example
+    -------
+    ::
 
-    Example:
         lst = [4, 7, 11, 2]
         pairs(lst) yields (4, 7), (7, 11), (11, 2)
 
-    Source:
-        http://stackoverflow.com/questions/1257413/1257446#1257446
+    Reference
+    ---------
+    http://stackoverflow.com/questions/1257413/1257446#1257446
+
+    Yields
+    ------
+    Yields a pair of consecutive elements (lst[k], lst[k+1]) of lst. Last
+    call yields the last two elements.
     """
     i = iter(lst)
     prev = next(i)
@@ -804,10 +828,11 @@ def list_entities(instance, entity_type):
         DataFrame of entities
 
     Example:
+    ::
+
         >>> data = read_excel('data-example.xlsx')
-        >>> model = create_model(data, range(1,25))
-        >>> list_entities(model, 'obj')  #doctest: +NORMALIZE_WHITESPACE
-                                         Description Domain
+        >>> model = create_model(data, vertex, edge)
+        >>> list_entities(model, 'obj')
         Name
         obj   minimize(cost = sum of all cost types)     []
         [1 rows x 2 columns]
@@ -848,11 +873,12 @@ def list_entities(instance, entity_type):
 
 def get_onset_names(entity):
     """
-        Example:
-            >>> data = read_excel('data-example.xlsx')
-            >>> model = create_model(data, range(1,25))
-            >>> get_onset_names(model.e_co_stock)
-            ['t', 'sit', 'com', 'com_type']
+    Example:
+    ::
+        vertex, edge = create_square_grid()
+        data = read_excel('data-example.xlsx')
+        model = create_model(data, vertex, edge)
+        get_onset_names(model.hub)
     """
     # get column titles for entities from domain set names
     labels = []
@@ -1405,7 +1431,7 @@ def report(prob, filename):
 
 
 def save_log(result, filename):
-    """Save urbs result and solver information to a log file.
+    """Save rivus result and solver information to a log file.
 
     Args:
         result: as returned by the solve method of a solver object
@@ -1420,7 +1446,7 @@ def save_log(result, filename):
 
 def save(prob, filepath):
     """Save rivus model instance to a gzip'ed pickle file
-    
+
     Pickle is the standard Python way of serializing and de-serializing Python
     objects. By using it, saving any object, in case of this function a
     Pyomo ConcreteModel, becomes a twoliner.
@@ -1428,20 +1454,20 @@ def save(prob, filepath):
     compress the pickle file further.
     It is used over the possibly more compact bzip2 compression due to the
     lower runtime.
-    
+
     Parameters
     ----------
     prob
         a rivus model instance
     filepath
         pickle file to be written
-    
+
     Notes
     -----
     `Pickle <https://docs.python.org/2/library/pickle.html>`_
     `GZIP <https://docs.python.org/2/library/gzip.html>`_
     `<>bzip2 <http://stackoverflow.com/a/18475192/2375855>`_
-    
+
     """
     import gzip
     try:
@@ -1453,12 +1479,12 @@ def save(prob, filepath):
 
 def load(filepath):
     """Load a rivus model instance from a gzip'ed pickle file
-    
+
     Parameters
     ----------
     filepath
         absolute or relative path to gzip'd pickle file
-    
+
     Returns
     -------
     prob

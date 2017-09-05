@@ -63,11 +63,20 @@ Most generally speaking, for working with ``rivus`` you will need the following 
 There are several possibilities to get the spatial input data for ``rivus``,
 and conduct analysis on them.
 
-1. Extract data from :abbr:`OSM (OpenStreetMap)` with the help of MapZen_
+1. Extract data from :abbr:`OSM (OpenStreetMap)` (e.g. with the help of MapZen_)
 
   - Extensive data preparation is needed for simplifying the geometrical structure
-    of the vector layers. (Currently, this work-flow is under maintenance.)
+    of the vector layers. (*Currently, this work-flow is under maintenance.*)
   - Example haag15_ illustrates an extended version of this method.
+
+  .. note::
+
+    Package OSMnx_ could be investigated, as it proposes a very convenient ``gdf_from_place`` function. And through a NetworkX_ graph a new, general and real-world friendly way of constructing input for :func:`crate_model()` could be implemented.
+    :: 
+
+      >>> osmnx as ox
+      >>> city = ox.gdf_from_place('Berkeley, CA')
+
 
 2. Create vector layers and data manually with a GIS editor. (E.g. QGIS_)
 
@@ -86,6 +95,7 @@ and conduct analysis on them.
 .. _haag15: https://github.com/tum-ens/rivus/tree/master/data/haag15
 .. _MapZen: https://mapzen.com/data/metro-extracts/
 .. _QGIS: http://www.qgis.org/en/site/
+.. _OSMnx: https://github.com/gboeing/osmnx
 
 
 Input from OSM or QGIS
