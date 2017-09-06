@@ -14,7 +14,7 @@ If you are new to the project, take up that one.
 
 Most importantly, use descriptive names and stick to one style and use it consequently.
 
-Regarding functions, variables, class etc. we follow the good advices of PEP8_.
+Regarding functions, variables, class etc. we follow the good advice of PEP8_.
 
 .. note::
   Functions: Please use an underscore like ``_spam_and_helps()`` for functions which should not be used outside of the sub-package (package). |br| Start function names without an underscore if they are meant to be used outside of the package/sub-package. E. g. ``flying_circus()``.
@@ -24,7 +24,10 @@ For the rest, it is still to be defined. But we basically follow PEP8_,  but do 
   *"A Foolish Consistency is the Hobgoblin of Little Minds"*
  
 So use it when it makes sense, and do not where it does not.
-We would even suggest to look for an auto-pep8 plug-in for your favourite IDE or text editor. Or go bare bones and get something like flake8_ to check your code. If it is too annoying, you can always add some guidelines to be ignored. But
+We would even suggest looking for an auto-pep8 plug-in for your favourite IDE or text editor.
+Or go bare bones and get something like flake8_ to check your code.
+If it is too annoying, you can always add some guidelines to be ignored.
+But at the and of the day, it will help you and us to read the code.
 
 
 .. todo::
@@ -40,18 +43,18 @@ Unittests
 
 .. note::
 
-  Unittests are criteria for pull-request acceptance.
+  Unit tests are criteria for pull-request acceptance.
 
-As several bug could have been avoided with unittests, we want to embrace testing
-in the development work-flow.
+As several bugs could have been avoided with unit tests, we want to embrace testing
+in the development workflow.
 
 You can find and extend the tests in :file:`rivus-repo/rivus/tests/test_*.py`
-Just add  your own test_subpackage.py and start with the following skeleton:
+Just add your own test_subpackage.py and start with the following skeleton:
 
 .. code-block:: python
 
   import unittest
-  # import what you want to test with absolute path.
+  # import what you want to test with an absolute path.
   # If I want to test line_length from main.rivus:
   from rivus.main.rivus import line_length
 
@@ -89,7 +92,7 @@ Profiling
 **********
 
 Although the whole project is not yet in a performance oriented phase, 
-it can be very helpful on the long run if more and more profiling is involved 
+it can be very helpful in the long run if more and more profiling is involved 
 within the contributions.
 
 For decision between short expression: use :code:`timeit.timeit()`.
@@ -136,7 +139,7 @@ the following short description should be enough to get you started and ensure t
   Google it, there is a good chance that there is already a plug-in for your 
   favourite IDE or text editor. (Yes, there is even one for vim...)
 
-  The whole RtD (Sphinx) work-flow builds on :abbr:`rST (reStructuredText)`.
+  The whole RtD (Sphinx) workflow builds on :abbr:`rST (reStructuredText)`.
   So format your Examples, Notes, References in the doc-strings also
   with rST syntax.
 

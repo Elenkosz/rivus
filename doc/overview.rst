@@ -17,9 +17,9 @@ Data- and Work-Flows
 Work-flows differ from each other mainly at the beginning. From where one gets
 the input data.
 
-Further differencies can arise, if one is interested in running a multitude of 
-optimization problems. Whatever the reason is (sensitivity analysis, structural 
-analysis etc.) the same needs arise. The file based output will not be sufficent
+Further differences can arise if one is interested in running a multitude of optimization problems.
+Whatever the reason is (sensitivity analysis, structural analysis etc.) the same needs arise.
+The file based output will not be sufficient
 to manage and analyse the output effectively. And there is a good chance, that one
 will move to a remote server to relieve the own computer.
 
@@ -41,13 +41,13 @@ Most generally speaking, for working with ``rivus`` you will need the following 
   - We have been using shapefiles but you can use any format which geopandas_ can read.
   - Shapefiles are a somewhat awkward file format, but you can find an included example 
     in `mnl <https://github.com/tum-ens/rivus/tree/master/data/mnl>`_.
-  - We await at the an extended version of the files ``vertex`` and an ``edge``.
-    Which, exceeding the geometrical information hold additional data. ``vertex`` holds information about
-    the maximum available commodity in a source vertex. ``edge`` incorporates the 
-    accumulated demand per area (building) type and per edge (street). The demand's unit is
-    |m2| as it represents the accumulated base area of different building types.
-    This data preparation can be achieved in a run-script before model creation or beforehand
-    at data creation.
+  - We need an extended version of the files ``vertex`` and ``edge``
+    which next to the geometrical information, hold additional demand or source columns.
+    ``vertex`` holds information about the maximum available commodity in a source vertex.
+    ``edge`` incorporates the accumulated demand per area (building) type and per edge (street).
+    The demand's unit is |m2| as it represents the accumulated base area of different building types.
+    This data preparation can be achieved in a run-script before model creation or with helpers
+    manually in the data preparation process.
   - Detailed description: :ref:`vertex <a_vertex>`, :ref:`edge <a_edge>`
 
 
@@ -66,19 +66,27 @@ and conduct analysis on them.
 1. Extract data from :abbr:`OSM (OpenStreetMap)` (e.g. with the help of MapZen_)
 
   - Extensive data preparation is needed for simplifying the geometrical structure
-    of the vector layers. (*Currently, this work-flow is under maintenance.*)
+    of the vector layers. (*Currently, this workflow is under maintenance.*)
   - Example haag15_ illustrates an extended version of this method.
 
   .. note::
 
-    Package OSMnx_ could be investigated, as it proposes a very convenient ``gdf_from_place`` function. And through a NetworkX_ graph a new, general and real-world friendly way of constructing input for :func:`crate_model()` could be implemented.
+    Package OSMnx_ could be investigated, as it proposes a very convenient ``gdf_from_place`` function.
+    (Although it fetches one polygon, the source could serve as a good example. 
+    Alternatively, the whole shapefile phase could be skipped, with its :func:`ox.graph_from_place('Manhattan, New York, USA', network_type='drive')` function. And the :file:`edge` could be calculated
+    from that source. There are even some possibilities to simplify the resulting graph,
+    which could be an alternative to the current ``skeletron`` based approach.
+    Furthermore, this package already solved the automated UTM code calculation
+    so at least, that would be of great use for us.
     :: 
 
       >>> osmnx as ox
       >>> city = ox.gdf_from_place('Berkeley, CA')
+      >>> city_xy = os.project_gdf(city)
+      >>> G = ox.graph_from_place('Manhattan, New York, USA', network_type='drive'
 
 
-2. Create vector layers and data manually with a GIS editor. (E.g. QGIS_)
+2. Create vector layers manually with a GIS editor. (E.g. QGIS_)
 
   - Rather applicable for smaller research areas.
   - Mind the snapping settings for vertices and edges!
@@ -101,9 +109,10 @@ and conduct analysis on them.
 Input from OSM or QGIS
 ========================
 
-If you choose to go with the first or second work-flow, the scripts 
+If you choose to go with the first or second workflow, the scripts 
 ``building_to_edge.py`` and ``streets_to_edge.py`` in the ``rivus.converter`` sub package
-can help you with the data preparation. (Even if ``skeletrontools`` may not work at your environment.)
+can help you with the data preparation.
+(Even if ``skeletrontools`` may not work in your environment.)
 
 See helpful notebook, for deeper dive.
 
@@ -114,7 +123,7 @@ See helpful notebook, for deeper dive.
 .. _OSM street data to vertex.shp and edge.shp: https://nbviewer.jupyter.org/gist/lnksz/7977c4cff9c529ca137b67b6774c60d7
 
 
-The example run-script ``runmin.py`` illustrates the first two work-flows.
+The example run-script ``runmin.py`` illustrates the first two workflows.
 
 Here is a summary, where the main part is done in *10 lines of code*:
 
@@ -179,7 +188,7 @@ Summary of the usage of gridder:
   solver.solve(prob, tee=True)
 
 As you can see, the difference is mainly in the *spatial* section. The functions in gridder expose
-a variaty of arguments to offer customization but the defaults can also be used for 
+a variety of arguments to offer customization but the defaults can also be used for 
 getting used to rivus. (E.g. above, latlon is not really needed)
 
 Possibilities after solution
@@ -193,14 +202,14 @@ Retrieve results
   Or you can create a report in a format of an Excel spreadsheet with ``report``.
 
 Save the result
-  as a serialized archive. (From which you can reload an re-run it.) 
+  as a serialized archive. (From which you can reload and re-run it.) 
 
 Create plots
   ``rivus.main.plot`` or ``rivus.main.result_figures`` expose ``matplotlib`` with all its power (and particular API...) |br|
   ``rivus.io.fi3d`` and ``plotly`` will give you the tool for 3D, interactive visual data exploration. Also inside of a jupyter notebook, or exported as online, shareable website.
 
 Conduct graph theoretical analysis
-  ``rivus.graph`` holds the adapters so that you  can leverage the opportunities offered by mainstream packages like NetworkX_ and python-igraph_.
+  ``rivus.graph`` holds the adapters so that you can leverage the opportunities offered by mainstream packages like NetworkX_ and python-igraph_.
 
 Store to PostgreSQL+PostGIS database.
   ``rivus.io.db`` is all about that. |br|
@@ -302,7 +311,7 @@ Reasons to do so:
 * Easier code re-usability.
 * "Structural documentation"
 
-It can be considered as a negative side-effect that import path have grown longer.
+It can be considered as a negative side-effect that import paths have grown longer.
 
 For in-depth description see the reference of each sub-package. |br|
 Here you can find a short description of each, to lead you in the good direction, 
@@ -318,7 +327,7 @@ Main
   As for version 0.1, this file was **the rivus** script and that is why it still holds some functions, which later will be moved to the ``io`` sub-package, mixed with functions which describe mathematical rules for the Pyomo model and are not meant to be used outside of the sub-package.
 
 Utils
-  Historically, the previous *python-tools* functions where migrated into this sub-package. (At the time when rivus was created these were all handy functions collected/created by ojdo, now the majority is obsolete.) These will be sorted out soon, and the purpose will shift towards a container of universal code snippets. 
+  Historically, the previous *python-tools* functions were migrated into this sub-package. (At the time when rivus was created these were all handy functions collected/created by ojdo, now the majority is obsolete.) These will be sorted out soon, and the purpose will shift towards a container of universal code snippets. 
 
   Now deployed:
 
@@ -335,24 +344,32 @@ Gridder
   Currently, you can create square-grids, with parametrizable features.
 
 IO
-  Prepare input for the :func:`plotly.offline.plot` function, with which you can generate interactive 3D plots. With a free Plotly account, you can store, embed, edit and share online your plots. But it only an option. Although, this sub-package may seem as a shiny extra, through the highly flexible API of Plotly an  intuitive-interactive data exploration tool was integrated into rivus. It triggered the finding of several major bugs in the original code-base.
+  Prepare input for the :func:`plotly.offline.plot` function, with which you can generate interactive 3D plots. With a free Plotly account, you can store, embed, edit and share online your plots. But it only an option. Although, this sub-package may seem as a shiny extra, through the highly flexible API of Plotly an intuitive-interactive data exploration tool was integrated into rivus. It triggered the finding of several major bugs in the original code-base.
 
   2D plotting will be moved here from ``rivus.main``.
 
   Besides plotting, the adapter to a PostgreSQL+PostGIS database can be found here.
-  This module covers the most of the SQL-world and offers a convenient way to interact with a set up data. A `separate documentation <http://rivus-db.readthedocs.io/en/latest/>`_ was dedicated to help users started, and document the now awaited data structure.
+  This module hides the most of the SQL-world and offers a convenient way to interact with the optimisation data.
+  A `separate documentation <http://rivus-db.readthedocs.io/en/latest/>`_ was dedicated to help users started, and document the now awaited data structure.
 
 Graph
-  Convert the resulting tabular data, which represent the built commodity carrier grids (electicity grid, Gas pipelines, district heating/cooling grid etc.) into a graph (network) format of either NetworkX_ or python-igraph_. Moreover, the file export functions of these libraries were bridged into a module in this sub-package. (Preferred file format is ``.gml`` which is supported by all common graph analysis tools. E.g. Gephi_ the Open-source de-facto tool for advanced graph visualisation and analysis.)
+  Convert the resulting tabular data, which represent the built commodity carrier grids
+  (electricity grid, Gas pipelines, district heating/cooling grid etc.) 
+  into a graph (network) format of either NetworkX_ or python-igraph_.
+  Moreover, the file export functions of these libraries were bridged into a module in this sub-package.
+  (Preferred file format is ``.gml`` which is supported by all common graph analysis tools.
+  E.g. Gephi_ the Open-source de-facto tool for advanced graph visualisation and analysis.)
 
   After the data is in their expected format, both NetworkX_ and python-igraph_ offer very advanced opportunities to analyse graphs. You can look up what you need in their documentation. Nevertheless, some basic analyse wrapper is provided to get the result for the most common questions about graph connectivity.
 
 Converter
-  The only sub-package, which were not intended to be used by import, but as a container for separate scripts which facilitate data preparation from real-world street network data sources.
+  The only sub-package, which was not intended to be used by import, but as a container for separate scripts which facilitate data preparation from real-world street network data sources.
 
 Tests
   Yes, the unit tests are located here. (What a surprise...)
-  One of the youngest members of the rivus sub-packages. It should not be necessary  to emphasize the importance of testing, but still again and again the joy of implementation takes away the focus from actually test the written code.
+  One of the youngest members of the rivus sub-packages.
+  It should not be necessary to emphasize the importance of testing,
+  but still again and again the joy of implementation takes away the focus from actually test the written code.
 
   As most of the bugs encountered during my work with ``rivus`` could have been avoided with simple unit tests, I tried to set an example and write tests in parallel to each new function. Anyway, there is a long way to go, but it is worth the energy.
 
@@ -376,15 +393,17 @@ Two citations to keep in mind, when working with mathematical programming:
 
 .. warning::
   As for the current state, ``rivus`` does not consider already existing energy infrastructure networks.
-  Thus the solution always assumes a **from scratch** planning. (Feature is planned to be integrated into the logic later.)
+  Thus the solution always assumes a **from scratch** planning.
+  (Feature is planned to be integrated into the logic later.)
 
 .. warning::
   As for now, ``rivus`` does **not handle storage** in any way. 
 
 .. note::
-  The works done with ``rivus`` were restricted to the the **urban level**.
-  Theoretically, there is no barrier for the model to reach for bigger structures, but
-  pragmatically a performance boost would be needed to push the project in the direction of applicability to bigger or more detailed problems.
+  Research conducted with ``rivus`` was on the **urban level**.
+  Theoretically, there is no barrier for the model to reach for bigger structures, 
+  but pragmatically a performance boost would be needed to push the project 
+  in the direction of applicability to bigger or more detailed problems.
 
 .. note::
   There is no n-1 redundancy built in the model yet.

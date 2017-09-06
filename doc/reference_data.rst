@@ -23,7 +23,7 @@ As the spreadsheet was is the standard data input format, we will discuss that i
 You can find examples (templates) in the :file:`/data/haag15/` or :file:`/data/mnl/` data folders.
 
 This summary of the columns shall ease your understanding of those input variables.
-(Extracted from the tool-tip info in haag15 project.)
+(Extracted from the tool-tip info in the haag15 project.)
 
 .. note::
 
@@ -56,7 +56,7 @@ loss-fix
 
 loss-var
     Variable power loss [1/kW/m]
-    Relative loss term, dependent on input power flow through a ""pipe"":
+    Relative loss term, dependent on input power flow through a "pipe":
     Ingoing power flow per edge is multiplied by (1 - length * loss-var)
 
 cap-max
@@ -113,8 +113,8 @@ Time
 =====
 
 weight
-	Timestep weight [hours]
-    Length of timestep in hours. Sum of all weights == 8760
+	Time step weight [hours]
+    Length of time step in hours. Sum of all weights == 8760
 
 Elec
 	Scaling factor Elec [1]
@@ -129,7 +129,7 @@ Area-Demand
 
 peak
 	Building peak demand [kW/|m2|]
-    Peak demand of building type (must be present in building_shapefile) normalised to building area. Annual demand is encoded in timestep weights on sheet Time.
+    Peak demand of building type (must be present in building_shapefile) normalised to building area. Annual demand is encoded in time step weights on sheet Time.
 
 
 

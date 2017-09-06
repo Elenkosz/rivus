@@ -28,7 +28,7 @@ Merge was done only for better spacing in the documentation.
 
 .. figure:: img/rivus-caps.png
 
-Unified rivus capacity output of a smaller city.
+The unified rivus capacity output of a smaller city.
 
 Yellow:
   Electricity network capacities
@@ -40,7 +40,7 @@ Gray:
   Longitude and latitude guidelines.
 Symbols:
   Diamond shapes represent energy sources.
-  The width of the lines represent the amount of built capacity.
+  The width of the lines represents the amount of built capacity.
   Triangles represent energy conversion processes. Pointing upwards indicate generation,
   downwards indicates consumption of that commodity.
 
@@ -104,7 +104,7 @@ If you decide to use ``rivus.io.db``, ``rivus.utils.notify`` and do not want to 
 your credentials with the world (highlighted), or you simply want to store some run parameters outside
 of version controlling. (So "check-box" changes do not disturb the actual code part.)
 A config file is useful (and sometimes awaited as ``config.json`` in the root of the rivus repository.)
-If you use it, please add ``/config.json`` to your ``rivus/.git/info/exclue`` file.
+If you use it, please add ``/config.json`` to your ``rivus/.git/info/exclude`` file.
 
 Download a :download:`template <download/config.json>` for getting you started.
 
@@ -112,7 +112,7 @@ Download a :download:`template <download/config.json>` for getting you started.
   :linenos:
   :emphasize-lines: 4,9-11
 
-In the e.g. run-script or test you can access these informations with only a few lines of code:
+In the e.g. run-script or test you can access these information with only a few lines of code:
 
 .. code-block:: python
 
