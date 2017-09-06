@@ -385,3 +385,6 @@ Two citations to keep in mind, when working with mathematical programming:
   The works done with ``rivus`` were restricted to the the **urban level**.
   Theoretically, there is no barrier for the model to reach for bigger structures, but
   pragmatically a performance boost would be needed to push the project in the direction of applicability to bigger or more detailed problems.
+
+.. note::
+  There is no n-1 redundancy built in the model yet.
