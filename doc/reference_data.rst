@@ -4,10 +4,6 @@ Reference - Data Formats
 
 .. _a_datafromats:
 
-**************
-Data Formats
-**************
-
 As rivus expects its input variables from different sources, this section shall help you to get along with the parameters.
 
 .. figure:: img/dataflow-all.png
@@ -18,8 +14,9 @@ As rivus expects its input variables from different sources, this section shall 
 
 .. _a_spreadsheet:
 
+*************
 Non Spatial
-============
+*************
 
 You can retrieve non-spatial data from a spreadsheet or from a database.
 As the spreadsheet was is the standard data input format, we will discuss that in the following section.
@@ -36,7 +33,7 @@ This summary of the columns shall ease your understanding of those input variabl
     + Do not leave 'zombie' record (e.g. a process without listed commodity).
 
 Commodity
-----------------
+==========
 cost-inv-fix
     Fixed investment costs [€/m]
     Capacity-independent investment costs for pipe/cable to transmit that commodity.   
@@ -71,7 +68,7 @@ allowed-max
     Limits the net amount of generation of this commodity (e.g. CO2). Note that processes that consume a commodity (e.g. CCS) can reduce the net amount.
 
 Process
-----------------
+========
 
 cost-inv-fix
     Fixed investment costs [€]
@@ -106,14 +103,14 @@ cap-max
 
 
 Process-Commodity
-------------------
+==================
 
 ratio
 	Input/output ratio
     Flows in and out of processes, relative to 1 unit of throughput. For CO2, unit is kg/kWh (for example)
 
 Time
-------
+=====
 
 weight
 	Timestep weight [hours]
@@ -128,7 +125,7 @@ Heat
     Relative scaling factor of demand 'Heat' per time step. Interpret like y-values of a normalised annual load duration curve.
 
 Area-Demand
--------------
+============
 
 peak
 	Building peak demand [kW/|m2|]
@@ -144,8 +141,9 @@ peak
 
 .. _a_vertex:
 
+*********
 Vertex 
-=======
+*********
 
 The examples are given with the help of the Gridder sub-package, but the that depicts 
 very well what you should see in a shapefile's attribute list. (Excluding the special geometry column of course.)
@@ -154,7 +152,7 @@ very well what you should see in a shapefile's attribute list. (Excluding the sp
 
 +----------------------+---------------+-------------------------------------------------------------+---------------------------+---------------------------+
 | Vertex               | geometry      | Commodity 1. - e.g.: Elec                                   | Commodity 2. - e.g.: Heat | Commodity 3.  - e.g.: Gas |
-+======================+===============+=============================================================+===========================+===========================+
++*************==========+===============+=============================================================+===========================+===========================+
 | Zero-based numbering | Shapely.Point | Amount of available commodity per vertex. 0 to large number | same                      | same                      |
 +----------------------+---------------+-------------------------------------------------------------+---------------------------+---------------------------+
 
@@ -179,8 +177,9 @@ Should give you:
 
 .. _a_edge:
 
+*********
 Edge 
-=======
+*********
 
 The examples are given with the help of the Gridder sub-package, but the that depicts 
 very well what you should see in a shapefile's attribute list. (Excluding the special geometry column of course.)
