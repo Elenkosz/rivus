@@ -125,7 +125,7 @@ Documentation
 **************
 
 Nobody can explain better what your code does than you.
-The doc-string are essential, and I would not suppose anybody
+The doc-strings are essential, and I would not suppose anybody
 would submit code without it ;)
 
 Please take the time and jump into the conventions of :abbr:`RtD (Readthedocs)`
