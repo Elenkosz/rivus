@@ -38,36 +38,187 @@ We would even suggest to look for an auto-pep8 plug-in for your favourite IDE or
 Unittests
 **********
 
-.. todo::
-  - Why and how-to
-    - Workflow
-  - Future critera for PR acceptance
+.. note::
+
+  Unittests are criteria for pull-request acceptance.
+
+As several bug could have been avoided with unittests, we want to embrace testing
+in the development work-flow.
+
+You can find and extend the tests in :file:`rivus-repo/rivus/tests/test_*.py`
+Just add  your own test_subpackage.py and start with the following skeleton:
+
+.. code-block:: python
+
+  import unittest
+  # import what you want to test with absolute path.
+  # If I want to test line_length from main.rivus:
+  from rivus.main.rivus import line_length
+
+  # give a nice class name.
+  class RivusMainTest(unittest.TestCase):
+
+    def test_line_length(self):
+      # here comes the test logic
+      # self.assertTrue(4/2 == 4//2, msg='What? Is not that always true???')
+      pass
+
+To run all tests:
+::
+
+  >>> cd /to/rivus/repo/
+  >>> python -m unittest
+  ----------------------------------------------------------------------
+  Ran 10 tests in 4.572s
+
+  OK
+
+To run specific test(s):
+::
+
+  >>> cd /to/rivus/repo/
+  >>> python -m unittest rivus.tests.test_db
+  ----------------------------------------------------------------------
+  Ran 1 test in 1.213s
+
+  OK
+
 
 **********
 Profiling
 **********
 
-.. todo::
-  - Why and how-to
-    - Workflow
-  - Bonus points at PR acceptance
+Although the whole project is not yet in a performance oriented phase, 
+it can be very helpful on the long run if more and more profiling is involved 
+within the contributions.
+
+For decision between short expression: use :code:`timeit.timeit()`.
+E.g. is ``.xs()`` or ``.loc[]`` indexer slower from a DataFrame?
+
+To detect overall (function-level) hotspots (where the most time is spent)
+you can use cProfile with pstats.
+See `blog post <http://stefaanlippens.net/python_profiling_with_pstats_interactive_mode/>`_
+::
+
+  python -m cProfile -o runme.profile runme.py  # Execute with profiler
+  python -m pstats runme.profile  # Interactive analyser
+  % sort cumulative
+  % stats 10
+
+To go deeper, you can use the jupyter magic, %lprun (line_profiler). 
+See `end of tutorial <http://nbviewer.jupyter.org/gist/jiffyclub/3062428>`_
+and `other <http://mortada.net/easily-profile-python-code-in-jupyter.html>`_
+::
+  
+  %load_ext line_profiler
+  %lprun -f slow_functions.main slow_functions.main()
+
+.. note::
+
+  Profiling is encouraged before pull-request.
 
 **************
 Documentation
 **************
 
 Nobody can explain better what your code does than you.
-The docstring in the source code are elementary, and I would not suppose anybody
-would submit code without it...
-But to make it easier for the next contributors, this online documentation is to be maintained as well.
-Please take the time and jump into the following short tutorial and ensure the success of your contribution
-with a nice documentation.
+The doc-string are essential, and I would not suppose anybody
+would submit code without it ;)
 
-.. todo::
-  - RtD & Sphinx: Why and how-to
-    - Workflow
-      - conversion tools
-  - Kinda needed at PR acceptance
+Please take the time and jump into the conventions of :abbr:`RtD (Readthedocs)`
+the following short description should be enough to get you started and ensure the success of your contribution.
+
+.. note::
+
+  We use napoleon_ (autodoc_) extensions to parse the doc-strings.
+  You can decide whether you choose NumPy or Google style.
+
+  Google it, there is a good chance that there is already a plug-in for your 
+  favourite IDE or text editor. (Yes, there is even one for vim...)
+
+  The whole RtD (Sphinx) work-flow builds on :abbr:`rST (reStructuredText)`.
+  So format your Examples, Notes, References in the doc-strings also
+  with rST syntax.
+
+  Doc-string template:
+  ::
+
+    """Summary line.
+
+    Extended description of function.
+
+    Parameters
+    ----------
+    arg1 : int
+        Description of arg1
+    arg2 : str
+        Description of arg2
+
+    Returns
+    -------
+    bool
+        Description of return value
+
+    Example
+    --------
+    ::
+
+      this_will = 'be formatted as nice code!'
+
+    Note
+    ----
+    + This is a bullet list
+    + E.g. for limitations...
+
+    .. note::
+
+      This will draw attention to the content.
+
+    .. warning::
+
+      This is for deprecate warnings and such. 
+    """
+
+How to write (and build) documentation locally:
+
++ `Install Sphinx <http://docs.readthedocs.io/en/latest/getting_started.html>`_
+  ::
+
+    pip install sphinx sphinx-autodoc
+
++ `Install RtD local theme <https://github.com/rtfd/sphinx_rtd_theme#id2>`_
+  ::
+
+    pip install sphinx_rtd_theme    
+
++ Build the docs manually into doc/_build/html/
+  ::
+
+    cd /rivus/repo/doc
+    make html
+
++ Or start autobuild, which will detect changes and autobuild the new html.
+  ::
+
+    cd /rivus/repo
+    sphinx-autodoc doc/ doc/_build/html
+
+Tips:
+
++ `online table editor <http://truben.no/table/>`_
++ `online pandoc converter <https://pandoc.org/try/>`_
+  It is an anything to anything converter. Here: (HTML, Markdown, ...) -> rST
++ `online rST/Sphinx editor <https://livesphinx.herokuapp.com/>`_
++ You can also try Atom and its rST packages.
+
+.. note::
+
+  Documentation is a criteria for pull-request acceptance.
+
+
+.. _nepoleon: http://www.sphinx-doc.org/en/stable/ext/napoleon.html
+.. _autodoc: http://www.sphinx-doc.org/en/stable/ext/autodoc.html
+
 
 **************
 Doc TODOs

@@ -223,9 +223,37 @@ Structuring
 Repo Scope
 ===========
 
-.. todo::
+Let me explain you the files/directories from which you should know 
+the help of the following ASCII-tree:
+
+.. code-block:: none
   
-  Add list and description of most important files.
+  rivus
+  ├───data            ------>  project-wise
+  │   ├───haag15      ------>  OSM extract example
+  │   ├───mnl         ------>  Minimalistic self-drawn example
+  │   └───chessboard  ------>  Using Gridder
+  │
+  ├───doc
+  │   ├───img
+  │   └───_build      ------>  /html/ to check the doc locally
+  │
+  ├───result          ------>  run-wise for output
+  │
+  ├───rivus           ------>  rivus package
+  │   ├───converter   ------>  data preparation
+  │   ├───graph       ------>  conversion + analysis
+  │   ├───gridder     ------>  abstract spatial input
+  │   ├───io          ------>  3D plot + DB
+  │   ├───main        ------>  core model + unmoved io
+  │   ├───tests       ------>  unittests
+  │   └───utils       ------>  small snippets to DRY the code
+  │
+  ├run*.py            ------>  project run files
+  ├readthedocs.yml    ------>  config for building the docs
+  └environment.yml    ------>  config for installing dependencies on readthedocs
+  +config.json        ------>  optional config file for run parameters
+
 
 readthedocs.yml
   `Configuration file <http://docs.readthedocs.io/en/latest/yaml-config.html>`_ for the documentation building on readthedocs server. Now it defines the python version and the conda environment configuration file for the build system. This is how we can use napoleon_ (autodoc_) to document our functions nicely.
@@ -233,6 +261,21 @@ readthedocs.yml
 .. _nepoleon: http://www.sphinx-doc.org/en/stable/ext/napoleon.html
 .. _autodoc: http://www.sphinx-doc.org/en/stable/ext/autodoc.html
 
+environment.yml
+  `Conda environment file <https://conda.io/docs/user-guide/tasks/manage-environments.html#sharing-an-environment>`_
+
+.. warning::
+
+  Because of geopandas unclean installation through conda / conda-forge, it
+  is added through pip. This is needed so that autodoc can generate the reference
+  contents from the doc-strings.
+
+.. note::
+
+  You could also install locally from this file with a one-liner.
+  ::
+
+    conda env create -f environment.yml
 
 
 
