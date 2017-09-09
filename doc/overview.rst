@@ -209,7 +209,8 @@ Create plots
   ``rivus.io.fi3d`` and ``plotly`` will give you the tool for 3D, interactive visual data exploration. Also inside of a jupyter notebook, or exported as online, shareable website.
 
 Conduct graph theoretical analysis
-  ``rivus.graph`` holds the adapters so that you can leverage the opportunities offered by mainstream packages like NetworkX_ and python-igraph_.
+  ``rivus.graph`` holds the adapters so that you can leverage the opportunities offered by mainstream packages like NetworkX_ and python-igraph_. Or export the results in 
+  mainstream graph formats like (``.gml``) and conduct data visualisation or analysis with a dedicated tool.
 
 Store to PostgreSQL+PostGIS database.
   ``rivus.io.db`` is all about that. |br|
