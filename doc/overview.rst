@@ -400,6 +400,12 @@ Two citations to keep in mind, when working with mathematical programming:
 .. warning::
   As for now, ``rivus`` does **not handle storage** in any way. 
 
+.. warning::
+  ``rivus`` estimates the cost-capacity functions of commodity transfer building
+  blocks to be linear and continuous.
+  (E.g. instead of handling discrete pipe diameters and prices, a linear function
+  is used instead.)
+
 .. note::
   Research conducted with ``rivus`` was on the **urban level**.
   Theoretically, there is no barrier for the model to reach for bigger structures, 
