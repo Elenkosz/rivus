@@ -232,6 +232,12 @@ rivus\.plot
 
 Interactive 3D data visualization! See live example `here <https://plot.ly/~lnksz/46/>`_ (May take a while to load.)
 
+.. only:: html
+
+   .. figure:: img/3dplot.gif
+
+      Demo of a 3D interactive plot.
+
 Plotly has a great `documentation <https://plot.ly/python/reference/#scatter3d>`_ and an extensive
 `examples library <https://plot.ly/python/>`_.
 
