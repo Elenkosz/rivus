@@ -96,7 +96,13 @@ it can be very helpful in the long run if more and more profiling is involved
 within the contributions.
 
 For decision between short expression: use :code:`timeit.timeit()`.
-E.g. is ``.xs()`` or ``.loc[]`` indexer slower from a DataFrame?
+E.g. is ``.at[]`` or ``.loc[]`` indexer slower from a DataFrame?
+::
+  
+  >>> import timeit.timeit as tit
+  >>> dfout = m.r_out.to_frame()  # m is a rivus problem instance
+  >>> tit("m.r_out.loc['Gas power plant', 'CO2']", number=1000, globals=dict(m=m))
+  >>> tit("dfout.at[('Gas power plant', 'CO2'), 'ratio']", number=1000, globals=dict(dfout=dfout))
 
 To detect overall (function-level) hotspots (where the most time is spent)
 you can use cProfile with pstats.
