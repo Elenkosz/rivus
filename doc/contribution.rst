@@ -139,7 +139,7 @@ the following short description should be enough to get you started and ensure t
 
 .. note::
 
-  We use napoleon_ (autodoc_) extensions to parse the doc-strings.
+  We use nepoleon_ (autodoc_) extensions to parse the doc-strings.
   You can decide whether you choose NumPy or Google style.
 
   Google it, there is a good chance that there is already a plug-in for your 
@@ -188,6 +188,18 @@ the following short description should be enough to get you started and ensure t
       This is for deprecate warnings and such. 
     """
 
+.. note::
+  For autodoc/napoleon to work, readthedocs must be able to build the whole
+  project. It will create a new environment and install the packages from
+  environment.yml. This is told to readthedocs through the ``readthedocs.yaml`` config file.
+  See :ref:`project structure <a_readyaml>`
+
+The whole process of the documentation is depicted in the following figure.
+
+.. figure:: img/docflow.png
+  :scale: 65 %
+  :align: center
+
 How to write (and build) documentation locally:
 
 + `Install Sphinx <http://docs.readthedocs.io/en/latest/getting_started.html>`_
@@ -210,7 +222,7 @@ How to write (and build) documentation locally:
   ::
 
     cd /rivus/repo
-    sphinx-autodoc doc/ doc/_build/html
+    sphinx-autobuild doc/ doc/_build/html
 
 Tips:
 

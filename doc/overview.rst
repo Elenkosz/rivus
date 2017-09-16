@@ -264,6 +264,7 @@ the help of the following ASCII-tree:
   └environment.yml    ------>  config for installing dependencies on readthedocs
   +config.json        ------>  optional config file for run parameters
 
+.. _a_readyaml:
 
 readthedocs.yml
   `Configuration file <http://docs.readthedocs.io/en/latest/yaml-config.html>`_ for the documentation building on readthedocs server. Now it defines the python version and the conda environment configuration file for the build system. This is how we can use napoleon_ (autodoc_) to document our functions nicely.
