@@ -200,6 +200,9 @@ The whole process of the documentation is depicted in the following figure.
   :scale: 65 %
   :align: center
 
+  How to write docs. Dashed: suggested optional step. After commit, 
+  the rest should be done automatically.
+
 How to write (and build) documentation locally:
 
 + `Install Sphinx <http://docs.readthedocs.io/en/latest/getting_started.html>`_
