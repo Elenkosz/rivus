@@ -154,20 +154,6 @@ Moreover, the possibility to have an input generator integrated into ``rivus`` i
 create_grid
 ----------------
 
-.. testsetup:: create_grid
-
-    from rivus.gridder.create_grid import create_square_grid
-
-.. testcode:: create_grid
-
-    vertex, edge = create_square_grid()
-    print(vertex.head())
-    print("Hello")
-
-.. testoutput:: create_grid
-
-
-
 .. automodule:: rivus.gridder.create_grid
     :members:
 
