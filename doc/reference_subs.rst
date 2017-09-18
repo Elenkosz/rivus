@@ -90,7 +90,7 @@ Comparison of the common graph analysis tools:
     * `+` Easy (platform independent) installation
     * `-` Slower than igraph (and graph-tools)
 
-+ python-igraph_(fall-back):
++ python-igraph_ (fall-back):
 
     * `+` C based with python wrappers.
     * `+` Mature library package.
