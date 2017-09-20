@@ -37,6 +37,9 @@ import json
 config = []
 with open('./config.json') as conf:
     config = json.load(conf)
+# Speed up by looking less often for changes in other threads.
+import sys
+sys.setswitchinterval(0.5)
 
 
 def _source_variations(vertex, dim_x, dim_y):
@@ -129,24 +132,20 @@ def run_bunch(use_email=False):
     # Input Data
     # ----------
     # Spatial
-    street_lengths = arange(50, 300, 100)
-    num_edge_xs = [5, ]
+    street_lengths = arange(50, 260, 50)
+    num_edge_xs = [5, 9]
     # Non-spatial
     data = read_excel(data_spreadsheet)
     original_data = deepcopy(data)
     interesting_parameters = [
-        # {'df_name': 'commodity',
-        #  'args': {'index': 'Heat',
-        #           'column': 'cost-inv-fix',
-        #           'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}},
+        {'df_name': 'commodity',
+         'args': {'index': 'Heat',
+                  'column': 'cost-inv-fix',
+                  'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}},
         {'df_name': 'commodity',
          'args': {'index': 'Heat',
                   'column': 'cost-fix',
                   'lim_lo': 0.5, 'lim_up': 1.6, 'step': 0.5}}
-        # {'df_name': 'commodity',
-        #  'args': {'index': 'Elec',
-        #           'column': 'cost-var',
-        #           'step': 0.1}}
     ]
     # Model Creation
     solver = SolverFactory(config['solver'])
