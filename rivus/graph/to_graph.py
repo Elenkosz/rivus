@@ -70,7 +70,7 @@ def to_igraph(vdf, edf, pmax, comms=None, peak=None, save_dir=None, ext='gml'):
         g['Name'] = '{} capacity graph'.format(comm.upper())
         g['Commodity'] = comm
         g.vs['Label'] = vdf.index.values.tolist()
-        g.vs[comm] = vdf[comm].tolist()
+        g.vs[comm] = vdf[comm].tolist() if comm in vdf else [0, ] * len(vdf)
         g.es['Label'] = list(map(lambda v1v2: '{}-{}'.format(*v1v2),
                                  edf.index.values))
         g.es[comm] = pmax[comm].tolist()
