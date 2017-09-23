@@ -98,7 +98,7 @@ def _source_variations(vertex, dim_x, dim_y):
 
     for sources in source_setups:
         print('\nCurrent sources: \n{}'.format(sources))
-        variant = vert_init_commodities(vertex, ('Elec', 'Gas', 'Heat'),
+        variant = vert_init_commodities(vertex, ('Elec', 'Gas'),
                                         sources=sources, inplace=False)
         yield variant
 
@@ -151,10 +151,10 @@ def run_bunch(use_email=False):
     solver = SolverFactory(config['solver'])
     solver = setup_solver(solver, log_to_console=False, guro_time_lim=14400)
     # Solve | Analyse | Store | Change | Repeat
-    for dx in street_lengths:
-        for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
-            run_summary = 'Run with x:{}, y:{}'.format(len_x, len_y)
-            for num_edge_x in num_edge_xs:
+    for num_edge_x in num_edge_xs:
+        for dx in street_lengths:
+            for len_x, len_y in [(dx, dx), (dx, dx / 2)]:
+                run_summary = 'Run with x:{}, y:{}'.format(len_x, len_y)
                 vdf, edf = create_square_grid(num_edge_x=num_edge_x, dx=len_x,
                                               dy=len_y)
                 extend_edge_data(edf)
@@ -188,42 +188,43 @@ def run_bunch(use_email=False):
                             print('\tsolving...')
                             try:
                                 results = solver.solve(prob, tee=True)
+                                if (results.solver.status != SolverStatus.ok):
+                                    status = 'error'
+                                    outcome = 'error'
+                                else:
+                                    status = 'run'
+                                    if (results.solver.termination_condition !=
+                                            TerminationCondition.optimal):
+                                        outcome = 'optimum_not_reached'
+                                    else:
+                                        outcome = 'optimum'
                             except Exception as solve_error:
+                                status = 'error'
+                                outcome = 'error'
                                 print(solve_error)
                                 if use_email:
                                     sub = run_summary + '[rivus][solve-error]'
                                     email_me(solve_error, subject=sub,
                                              **email_setup)
-                            if (results.solver.status != SolverStatus.ok):
-                                status = 'error'
-                                outcome = 'error'
-                            else:
-                                status = 'run'
-                                if (results.solver.termination_condition !=
-                                        TerminationCondition.optimal):
-                                    outcome = 'optimum_not_reached'
-                                else:
-                                    outcome = 'optimum'
                             profile_log['solve'] = (timenow() - _p_solve)
 
                             # Plot
-                            _p_plot = timenow()
-                            plotcomms = ['Gas', 'Heat', 'Elec']
-                            try:
-                                fig = fig3d(
-                                    prob, plotcomms, linescale=8,
-                                    dz=(0.25 * len_x), use_hubs=True)
-                            except Exception as plot_error:
-                                err_tb = tb.format_exception(
-                                    None, plot_error, plot_error.__traceback__)
-                                tb.print_exception(
-                                    None, plot_error, plot_error.__traceback__)
-                                if use_email:
-                                    sub = run_summary + '[rivus][plot-error]'
-                                    email_me(err_tb, subject=sub,
-                                             **email_setup)
-                            profile_log['3d_plot_prep'] = (timenow() - _p_plot)
-
+                            # _p_plot = timenow()
+                            # plotcomms = ['Gas', 'Heat', 'Elec']
+                            # try:
+                            #     fig = fig3d(
+                            #         prob, plotcomms, linescale=8,
+                            #         dz=(0.25 * len_x), use_hubs=True)
+                            # except Exception as plot_error:
+                            #     err_tb = tb.format_exception(
+                            #         None, plot_error, plot_error.__traceback__)
+                            #     tb.print_exception(
+                            #         None, plot_error, plot_error.__traceback__)
+                            #     if use_email:
+                            #         sub = run_summary + '[rivus][plot-error]'
+                            #         email_me(err_tb, subject=sub, **email_setup)
+                            # profile_log['3d_plot_prep'] = (timenow() - _p_plot)
+                            fig = None
                             # Graph
                             _p_graph = timenow()
                             try:
@@ -231,11 +232,15 @@ def run_bunch(use_email=False):
                                 graphs = to_nx(_vdf, edf, pmax)
                                 graph_results = minimal_graph_anal(graphs)
                             except Exception as graph_error:
+                                err_tb = tb.format_exception(
+                                    None, graph_error, graph_error.__traceback__)
+                                tb.print_exception(
+                                    None, graph_error, graph_error.__traceback__)
+                                graph_results = None
                                 print(graph_error)
                                 if use_email:
                                     sub = run_summary + '[rivus][graph-error]'
-                                    email_me(graph_error, subject=sub,
-                                             **email_setup)
+                                    email_me(err_tb, subject=sub, **email_setup)
                             profile_log['all_graph_related'] = (
                                 timenow() - _p_graph)
 
