@@ -41,7 +41,8 @@ def to_igraph(vdf, edf, pmax, comms=None, peak=None, save_dir=None, ext='gml'):
     Returns
     -------
     list
-        List of igraph.Graph objects in order of ``comms``. Graphs are undirected and weighted.
+        List of igraph.Graph objects in order of ``comms``.
+        Graphs are undirected and weighted.
 
     Example
     -------
@@ -127,7 +128,8 @@ def to_nx(vdf, edf, pmax, comms=None, save_dir=None):
     Returns
     -------
     list
-        nx_graph objects in accordance with input `comms` or all commodities found in pmax.columns
+        nx_graph objects in accordance with input `comms` or all commodities
+        found in pmax.columns
 
     Example
     -------
@@ -155,7 +157,7 @@ def to_nx(vdf, edf, pmax, comms=None, save_dir=None):
         g.add_nodes_from(vdf.index.values.tolist())
         for x, row in vdf.iterrows():
             g.node[x]['Label'] = x
-            g.node[x][comm] = row[comm]
+            g.node[x][comm] = row[comm] if comm in row else 0
             g.node[x]['Longitude'] = row.geometry.x
             g.node[x]['Latitude'] = row.geometry.y
         cap_max = _pmax[comm].max()
