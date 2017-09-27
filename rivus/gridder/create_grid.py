@@ -251,6 +251,9 @@ def get_source_candidates(vdf, dim_x, dim_y, logic='sym'):
 
         + extrema - Pairs of vertices possibly further away from each other.
             Say: combination of the corners.
+            0: diagonal (0-23)
+            1: x-edge (0-5)
+            2: y-edge (0-18) if x-y have different lengths
 
         + center - One corner and one center-ish ID
 
@@ -278,9 +281,13 @@ def get_source_candidates(vdf, dim_x, dim_y, logic='sym'):
                    (0, dim_x - 1),
                    (dim_y - 1, 0),
                    (dim_y - 1, dim_x - 1)]
-        borders = [[mat[corners[0]], mat[corners[3]]],
-                   [mat[corners[0]], mat[corners[1]]],
-                   [mat[corners[0]], mat[corners[2]]]]
+        if dim_y == dim_x:
+            borders = [[mat[corners[0]], mat[corners[3]]],
+                       [mat[corners[0]], mat[corners[1]]]]
+        else:
+            borders = [[mat[corners[0]], mat[corners[3]]],
+                       [mat[corners[0]], mat[corners[1]]],
+                       [mat[corners[0]], mat[corners[2]]]]
         return borders
     else:
         raise ValueError('Unsupported source vertex calculation logic: <{}>'
