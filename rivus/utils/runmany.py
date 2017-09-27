@@ -98,7 +98,11 @@ def char_plot(vertex, just_return=False, show_vertex_ids=False):
     Parameters
     ----------
     vertex : GeoDataFrame
-        As returned by ``create_model()``
+        As returned by ``create_model()``.
+    just_return : Boolean
+        Plot and return None or do not plot but return a string.
+    show_vertex_ids : Boolean
+        Show ``O`` or verex id for vertices which are not sources.
     """
     from math import sqrt
     vertex = vertex.copy()
