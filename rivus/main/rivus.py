@@ -1477,7 +1477,7 @@ def save(prob, filepath):
         import cPickle as pickle
     except ImportError:
         import pickle
-    with gzip.GzipFile(filename, 'wb') as file_handle:
+    with gzip.GzipFile(filepath, 'wb') as file_handle:
         pickle.dump(prob, file_handle)
 
 def load(filepath):
