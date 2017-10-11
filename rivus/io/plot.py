@@ -287,7 +287,11 @@ def _add_edges(prob, bm, comms, comm_zs, pmax, hubs, proc, source, dz=5,
         for com in comms:
             is_built_comm = com in pmax.columns.values
             if is_built_comm:
-                comm_cap = pmax.get_value(v1v2, com)
+                try:
+                    comm_cap = pmax.get_value(v1v2, com)
+                except KeyError:
+                    comm_cap = 0
+
                 if comm_cap > 0:
                     is_built_edge = True
                 else:
@@ -434,6 +438,8 @@ def fig3d(prob, comms=None, linescale=1.0, use_hubs=False, hub_opac=0.55, dz=5,
     # Get result values for plotting
     _, pmax, kappa_hub, kappa_process = get_constants(prob)
     source = get_timeseries(prob)[0]
+
+
 
     # Use all involved commodities if none is given
     if comms is None:
