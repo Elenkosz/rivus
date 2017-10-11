@@ -35,10 +35,10 @@ def match_vertices_and_edges(vertices, edges, vertex_cols=('Vertex1', 'Vertex2')
         for k, vertex in enumerate(vertices.geometry):
             if line.touches(vertex) or line.intersects(vertex):
                 edge_endpoints.append(vertices.index[k])
-            # For imperfectly drawn vector layers:
-            if (vertex.buffer(0.001).intersects(line) or
-                    line.intersects(vertex)):
-                edge_endpoints.append(vertices.index[k])
+            # For imperfectly drawn vector layers: TODO CRS-relevant radius
+            # if (vertex.buffer(0.001).intersects(line) or
+            #         line.intersects(vertex)):
+            #     edge_endpoints.append(vertices.index[k])
 
         if len(edge_endpoints) == 0:
             warnings.warn("edge " + str(e) +
